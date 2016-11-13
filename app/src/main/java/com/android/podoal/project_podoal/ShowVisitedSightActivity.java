@@ -8,6 +8,7 @@ import android.widget.TextView;
 
 
 import com.android.podoal.project_podoal.datamodel.VisitedSightDTO;
+import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -20,11 +21,12 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Set;
 
 public class ShowVisitedSightActivity extends AppCompatActivity {
 
     private ArrayList<VisitedSightDTO> visitedSightList = new ArrayList<VisitedSightDTO>();
-    DBConnect dbConnect;
+    SelectQueryGetter dbConnector;
     TextView txtView;
 
     @Override
@@ -33,72 +35,51 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
         setContentView(R.layout.activity_show_visited_sight);
         txtView = (TextView)findViewById(R.id.visited_sight_txv);
 
-        dbConnect = new DBConnect();
+        dbConnector = new SelectQueryGetter();
 
-        dbConnect.execute("http://192.168.0.100/podoal/db_get_visited_sight.php");
+        try {
+            String result = dbConnector.execute("http://192.168.0.100/podoal/db_get_visited_sight.php").get();
+            SetTxtListByResult(result);
+        } catch (Exception e){
+            e.printStackTrace();
+        } finally {
+
+        }
     }
 
-    public class DBConnect extends AsyncTask<String, Void, String> {
+    private void SetTxtListByResult(String result) {
 
-        protected String doInBackground(String... params) {
-            String uri = params[0];
+        String member_id;
+        String sight_id;
+        Date visited_date;
+        int visited_id;
 
-            BufferedReader bufferedReader = null;
+        try {
+            JSONObject jsonObject = new JSONObject(result);
+            JSONArray jsonArray = jsonObject.getJSONArray("results");
 
-            try {
-                URL url = new URL(uri);
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject entity = jsonArray.getJSONObject(i);
 
-                bufferedReader = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                member_id = (entity.getString("member_id"));
+                sight_id = (entity.getString("sight_id"));
+                visited_date = (Date.valueOf(entity.getString("visited_date")));
+                visited_id = (entity.getInt("visited_id"));
 
-                String json;
-                while((json = bufferedReader.readLine())!= null){
-                    sb.append(json+"\n");
-                }
-
-                return sb.toString().trim();
-
-            }catch(Exception e){
-                return null;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-
-            String member_id;
-            String sight_id;
-            Date visited_date;
-            int visited_id;
-
-            try {
-                JSONObject jsonObject = new JSONObject(result);
-                JSONArray jsonArray = jsonObject.getJSONArray("results");
-
-                for (int i = 0; i < jsonArray.length(); i++) {
-                    JSONObject entity = jsonArray.getJSONObject(i);
-
-                    member_id = (entity.getString("member_id"));
-                    sight_id = (entity.getString("sight_id"));
-                    visited_date = (Date.valueOf(entity.getString("visited_date")));
-                    visited_id = (entity.getInt("visited_id"));
-
-                    visitedSightList.add(new VisitedSightDTO(member_id,
-                                                                sight_id,
-                                                                visited_date,
-                                                                visited_id));
-                }
-
-            } catch (JSONException e) {
-                e.printStackTrace();
+                visitedSightList.add(new VisitedSightDTO(member_id,
+                        sight_id,
+                        visited_date,
+                        visited_id));
             }
 
-            txtView.setText("member_id:" + visitedSightList.get(0).getMember_id() +
-                            "\nsight_id:" + visitedSightList.get(0).getSight_id() +
-                            "\nvisited_date:" + visitedSightList.get(0).getVisited_date() +
-                            "\nvisited_id:" + visitedSightList.get(0).getVisited_id());
-
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+
+        txtView.setText("member_id:" + visitedSightList.get(0).getMember_id() +
+                "\nsight_id:" + visitedSightList.get(0).getSight_id() +
+                "\nvisited_date:" + visitedSightList.get(0).getVisited_date() +
+                "\nvisited_id:" + visitedSightList.get(0).getVisited_id());
+
     }
 }
