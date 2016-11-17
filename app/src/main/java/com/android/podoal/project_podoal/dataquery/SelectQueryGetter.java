@@ -20,16 +20,18 @@ public class SelectQueryGetter extends AsyncTask<String, Void, String> {
 
         try {
             URL url = new URL(uri);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             StringBuilder sb = new StringBuilder();
 
-            bufferedReader = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            bufferedReader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 
             String json;
             while((json = bufferedReader.readLine())!= null){
                 sb.append(json+"\n");
             }
 
+            bufferedReader.close();
+            conn.disconnect();
             return sb.toString().trim();
 
         }catch(Exception e){

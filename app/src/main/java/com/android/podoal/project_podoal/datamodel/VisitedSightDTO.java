@@ -1,5 +1,8 @@
 package com.android.podoal.project_podoal.datamodel;
 
+import android.icu.util.ValueIterator;
+
+import java.net.URLEncoder;
 import java.util.Date;
 
 /**
@@ -13,6 +16,10 @@ public class VisitedSightDTO {
         this.sight_id = sight_id;
         this.visited_date = visited_date;
         this.visited_id = visited_id;
+    }
+
+    public VisitedSightDTO() {
+
     }
 
     private String member_id;
@@ -50,5 +57,19 @@ public class VisitedSightDTO {
 
     public void setMember_id(String member_id) {
         this.member_id = member_id;
+    }
+
+    public String makePostData() {
+        String postData = new String();
+
+        try {
+            postData += URLEncoder.encode("member_id", "UTF-8") + "=" + URLEncoder.encode(this.member_id, "UTF-8");
+            postData += "&" + URLEncoder.encode("sight_id", "UTF-8") + "=" + URLEncoder.encode(this.getSight_id(), "UTF-8");
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+
+        return postData;
     }
 }
