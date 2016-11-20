@@ -2,9 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Project_Podoal.iml" filepath="$PROJECT_DIR$/Project_Podoal.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Podoal.iml" filepath="$PROJECT_DIR$/Podoal.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/podoal.iml" filepath="$PROJECT_DIR$/podoal.iml" />
     </modules>
   </component>
 </project>

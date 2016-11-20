@@ -1,11 +1,8 @@
 package com.android.podoal.project_podoal;
 
-import android.os.AsyncTask;
-import android.support.v4.widget.TextViewCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
-
 
 import com.android.podoal.project_podoal.datamodel.VisitedSightDTO;
 import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
@@ -16,12 +13,6 @@ import org.json.JSONObject;
 
 import java.sql.Date;
 import java.util.ArrayList;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.Set;
 
 public class ShowVisitedSightActivity extends AppCompatActivity {
 
@@ -38,7 +29,7 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
         dbConnector = new SelectQueryGetter();
 
         try {
-            String result = dbConnector.execute("http://192.168.0.100/podoal/db_get_visited_sight.php").get();
+            String result = dbConnector.execute("http://192.168.200.181/podoal/db_get_visited_sight.php").get();
             SetTxtListByResult(result);
         } catch (Exception e){
             e.printStackTrace();
