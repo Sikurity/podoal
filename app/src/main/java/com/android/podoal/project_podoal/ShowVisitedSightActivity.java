@@ -1,8 +1,11 @@
 package com.android.podoal.project_podoal;
 
-import android.os.Bundle;
+import android.os.AsyncTask;
+import android.support.v4.widget.TextViewCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.widget.TextView;
+
 
 import com.android.podoal.project_podoal.datamodel.VisitedSightDTO;
 import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
@@ -29,7 +32,7 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
         dbConnector = new SelectQueryGetter();
 
         try {
-            String result = dbConnector.execute("http://192.168.200.181/podoal/db_get_visited_sight.php").get();
+            String result = dbConnector.execute("http://127.0.0.1/podoal/db_get_visited_sight.php").get();
             SetTxtListByResult(result);
         } catch (Exception e){
             e.printStackTrace();

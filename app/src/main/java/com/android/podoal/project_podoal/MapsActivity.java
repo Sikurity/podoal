@@ -1,17 +1,18 @@
 package com.android.podoal.project_podoal;
 
-import android.content.Context;
+import java.util.List;
+import java.util.Locale;
+
 import android.content.Intent;
 import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
+import android.content.Context;
 
 import com.android.podoal.project_podoal.datamodel.SightDTO;
 import com.android.podoal.project_podoal.datamodel.VisitedSightDTO;
@@ -20,6 +21,9 @@ import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import android.location.LocationListener;
+import android.widget.Toast;
+
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -27,9 +31,6 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener{
 
@@ -43,7 +44,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private List<SightDTO> sightList;
 
 
-    private double longitude;
+    private double longditude;
     private double latitude;
 
     @Override
@@ -55,7 +56,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         dbSelector = new SelectQueryGetter();
-        sightList = new ArrayList<>();
 
         sightSetup();
         cameraSetup();
@@ -66,20 +66,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void sightSetup() {
         try {
-            String result = dbSelector.execute("http://192.168.43.194/podoal/db_get_sight_list.php").get();
-            System.out.println(result);
+            String result = dbSelector.execute("http://127.0.0.1/podoal/db_get_sight_list.php").get();
+
             try {
                 JSONObject jsonObject = new JSONObject(result);
-                JSONArray jsonArray = jsonObject.getJSONArray("result");
+                JSONArray jsonArray = jsonObject.getJSONArray("results");
 
                 for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject entity = jsonArray.getJSONObject(i);
                     SightDTO dto = new SightDTO();
 
                     dto.setSight_id(entity.getString("sight_id"));
-                    dto.setLatitude(entity.getDouble("latitude"));
-                    dto.setLongitude(entity.getDouble("longitude"));
-                    dto.setRadius(entity.getDouble("radius"));
+                    dto.setLatitude(entity.getLong("latitude"));
+                    dto.setLongditude(entity.getLong("longitude"));
+                    dto.setRadius(entity.getLong("radius"));
                     dto.setName(entity.getString("name"));
                     dto.setInfo(entity.getString("info"));
                     dto.setLocal_number_ID(entity.getString("local_number_ID"));
@@ -166,9 +166,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         for (int i = 0; i < sightList.size(); i++) {
             SightDTO dto = sightList.get(i);
-
-            System.out.println(dto.toString());
-            mMap.addMarker(new MarkerOptions().position(new LatLng(dto.getLatitude(), dto.getLongitude()))
+            mMap.addMarker(new MarkerOptions().position(new LatLng(dto.getLatitude(), dto.getLongditude()))
                                                 .title(dto.getName()));
         }
 
@@ -197,7 +195,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         String postData = visitedSightDTO.makePostData();
 
                         try {
-                            String result = dbConnector.execute("http://192.168.43.194/podoal/db_insert_visited_sight.php", postData).get();
+                            String result = dbConnector.execute("http://127.0.0.1/podoal/db_insert_visited_sight.php", postData).get();
 
                             if (result != null) {
 
@@ -220,9 +218,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private class Circle {
-        public double x;
-        public double y;
-        public double r;
+        public float x;
+        public float y;
+        public float r;
     }
 
     private SightDTO ValidateSight() {
@@ -233,11 +231,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             SightDTO sight = sightList.get(i);
 
             c.x = sight.getLatitude();
-            c.y = sight.getLongitude();
+            c.y = sight.getLongditude();
             c.r = sight.getRadius();
 
             if (((  (latitude - c.x) * (latitude - c.x)) +
-                    ((longitude - c.y) * (longitude - c.y))) < (c.r * c.r)) {
+                    ((longditude - c.y) * (longditude - c.y))) < (c.r * c.r)) {
                 return sight;
             }
         }
@@ -249,7 +247,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onLocationChanged(Location location) {
         latitude = location.getLatitude();
-        longitude = location.getLongitude();
+        longditude = location.getLongitude();
     }
 
     @Override
