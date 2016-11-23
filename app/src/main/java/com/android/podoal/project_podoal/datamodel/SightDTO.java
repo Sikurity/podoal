@@ -6,10 +6,29 @@ package com.android.podoal.project_podoal.datamodel;
 
 public class SightDTO {
 
-    protected String sight_id;
-    protected double latitude;
-    protected double longitude;
-    protected double radius;
+    private String sight_id;
+    private float latitude;
+    private float longitude;
+    private float radius;
+
+    private String name;
+    private String info;
+    private String local_number_ID;
+
+
+    public SightDTO() {
+
+    }
+
+    public SightDTO(SightDTO dto) {
+        this.sight_id = dto.getSight_id();
+        this.latitude = dto.getLatitude();
+        this.longitude = dto.getLongitude();
+        this.radius = dto.getRadius();
+        this.name = dto.getName();
+        this.info = dto.getName();
+        this.local_number_ID = dto.getLocal_number_ID();
+    }
 
     public String getSight_id() {
         return sight_id;
@@ -19,27 +38,27 @@ public class SightDTO {
         this.sight_id = sight_id;
     }
 
-    public double getLatitude() {
+    public float getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(double latitude) {
+    public void setLatitude(float latitude) {
         this.latitude = latitude;
     }
 
-    public double getLongitude() {
+    public float getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(double longitude) {
+    public void setLongitude(float longitude) {
         this.longitude = longitude;
     }
 
-    public double getRadius() {
+    public float getRadius() {
         return radius;
     }
 
-    public void setRadius(double radius) {
+    public void setRadius(float radius) {
         this.radius = radius;
     }
 
@@ -66,38 +85,4 @@ public class SightDTO {
     public void setLocal_number_ID(String local_number_ID) {
         this.local_number_ID = local_number_ID;
     }
-
-    private String name;
-    private String info;
-    private String local_number_ID;
-
-
-    public SightDTO() {
-
-    }
-
-    public SightDTO(SightDTO dto) {
-        this.sight_id = dto.getSight_id();
-        this.latitude = dto.getLatitude();
-        this.longitude = dto.getLongitude();
-        this.radius = dto.getRadius();
-        this.name = dto.getName();
-        this.info = dto.getName();
-        this.local_number_ID = dto.getLocal_number_ID();
-    }
-
-
-    @Override
-    public String toString() {
-        return "SightDTO{" +
-                "sight_id='" + sight_id + '\'' +
-                ", latitude=" + latitude +
-                ", longitude=" + longitude +
-                ", radius=" + radius +
-                ", name='" + name + '\'' +
-                ", info='" + info + '\'' +
-                ", local_number_ID='" + local_number_ID + '\'' +
-                '}';
-    }
-
 }
