@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import com.android.podoal.project_podoal.datamodel.SightDTO;
 import com.android.podoal.project_podoal.datamodel.VisitedSightDTO;
+import com.android.podoal.project_podoal.dataquery.FileUploader;
 import com.android.podoal.project_podoal.dataquery.InsertQueryGetter;
 import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -45,6 +46,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private double longitude;
     private double latitude;
+
+    static final int REQUEST_CAMERA = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,7 +141,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onClick(View v)
             {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(intent,1);
+                startActivityForResult(intent,REQUEST_CAMERA);
             }
         });
 
@@ -180,8 +183,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        switch (resultCode) {
-            case 1:
+        switch (requestCode) {
+            case REQUEST_CAMERA:
+
+                if (resultCode != RESULT_OK || data == null) {
+                    Toast.makeText(this, "카메라에서 사진 정보를 가져올 수 없습니다.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 if (location == null) {
                     Toast.makeText(this, "현재 위치를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
                     return;
@@ -189,14 +198,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     SightDTO matchedSight = ValidateSight();
 
                     if (matchedSight != null) {
-                        InsertQueryGetter dbConnector = new InsertQueryGetter();
-                        VisitedSightDTO visitedSightDTO = new VisitedSightDTO();
-
-                        visitedSightDTO.setMember_id("tester");
-                        visitedSightDTO.setSight_id(matchedSight.getSight_id());
-                        String postData = visitedSightDTO.makePostData();
 
                         try {
+                            InsertQueryGetter dbConnector = new InsertQueryGetter();
+                            String maxVisitedId = dbSelector.execute("http://127.0.0.1/podoal/db_get_max_visit_sight_id.php").get();
+                            VisitedSightDTO visitedSightDTO = new VisitedSightDTO();
+
+                            visitedSightDTO.setMember_id("tester");
+                            visitedSightDTO.setSight_id(matchedSight.getSight_id());
+                            visitedSightDTO.setVisited_id(Integer.parseInt(maxVisitedId));
+                            String postData = visitedSightDTO.makePostData();
+
+                            FileUploader fileUploader = new FileUploader();
+
+                            Boolean bUploadSuccess = fileUploader.execute(data.getData().toString(),maxVisitedId).get();
+
+                            if (!bUploadSuccess.booleanValue()) {
+                                Toast.makeText(this, "사진 업로드에 실패 했습니다..", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
                             String result = dbConnector.execute("http://127.0.0.1/podoal/db_insert_visited_sight.php", postData).get();
 
                             if (result != null) {

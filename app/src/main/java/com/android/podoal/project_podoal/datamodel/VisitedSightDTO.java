@@ -76,6 +76,7 @@ public class VisitedSightDTO {
         try {
             postData += URLEncoder.encode("member_id", "UTF-8") + "=" + URLEncoder.encode(this.member_id, "UTF-8");
             postData += "&" + URLEncoder.encode("sight_id", "UTF-8") + "=" + URLEncoder.encode(this.getSight_id(), "UTF-8");
+            postData += "&" + URLEncoder.encode("visited_id", "UTF-8") + "=" + URLEncoder.encode(Integer.toString(this.getVisited_id()), "UTF-8");
         } catch (Exception e){
             e.printStackTrace();
             return null;
