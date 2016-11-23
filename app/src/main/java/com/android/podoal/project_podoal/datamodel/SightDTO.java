@@ -6,10 +6,10 @@ package com.android.podoal.project_podoal.datamodel;
 
 public class SightDTO {
 
-    private String sight_id;
-    private double latitude;
-    private double longitude;
-    private double radius;
+    protected String sight_id;
+    protected double latitude;
+    protected double longitude;
+    protected double radius;
 
     public String getSight_id() {
         return sight_id;

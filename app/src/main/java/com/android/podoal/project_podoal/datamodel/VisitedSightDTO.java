@@ -11,11 +11,12 @@ import java.util.Date;
 
 public class VisitedSightDTO {
 
-    public VisitedSightDTO(String member_id, String sight_id, Date visited_date, int visited_id) {
+    public VisitedSightDTO(String member_id, String sight_id, Date visited_date, int visited_id, String sight_name) {
         this.member_id = member_id;
         this.sight_id = sight_id;
         this.visited_date = visited_date;
         this.visited_id = visited_id;
+        this.sight_name = sight_name;
     }
 
     public VisitedSightDTO() {
@@ -26,6 +27,7 @@ public class VisitedSightDTO {
     private String sight_id;
     private Date   visited_date;
     private int   visited_id;
+    private String sight_name;
 
     public String getSight_id() {
         return sight_id;
@@ -57,6 +59,15 @@ public class VisitedSightDTO {
 
     public void setMember_id(String member_id) {
         this.member_id = member_id;
+    }
+
+
+    public String getSight_name() {
+        return sight_name;
+    }
+
+    public void setSight_name(String sight_name) {
+        this.sight_name = sight_name;
     }
 
     public String makePostData() {
