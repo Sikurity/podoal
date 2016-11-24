@@ -10,12 +10,6 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.android.podoal.project_podoal.ShowVisitedSightActivity">
 
-    <TextView
-        android:text="TextView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/visited_sight_txv" />
-
     <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"

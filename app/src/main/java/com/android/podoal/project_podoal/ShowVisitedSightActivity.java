@@ -24,7 +24,6 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
 
     private ArrayList<VisitedSightDTO> visitedSightList = new ArrayList<VisitedSightDTO>();
     SelectQueryGetter dbConnector;
-    TextView txtView;
     ListView listView;
     VisitedSightAdapter arrayAdapter;
 
@@ -32,7 +31,6 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_visited_sight);
-        txtView = (TextView)findViewById(R.id.visited_sight_txv);
         listView = (ListView)findViewById(R.id.visited_sight_list);
 
         dbConnector = new SelectQueryGetter();
