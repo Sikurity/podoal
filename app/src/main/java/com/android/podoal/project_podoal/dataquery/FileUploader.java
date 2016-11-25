@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import com.android.podoal.project_podoal.GlobalApplication;
 
 /**
  * Created by tj on 2016-11-23.
@@ -34,7 +35,7 @@ public class FileUploader extends AsyncTask<String,Void,Boolean> {
 
         try {
 
-            URL url = new URL("http://127.0.0.1/podoal/image/upload.php");
+            URL url = new URL("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/image/upload.php");
 
             File uploadFile = new File(filePath);
 
