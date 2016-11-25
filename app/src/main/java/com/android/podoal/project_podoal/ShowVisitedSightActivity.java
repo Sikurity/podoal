@@ -39,7 +39,7 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
         String member_id = new String ("2011003155");
 
         try {
-            String result = dbConnector.execute("http://127.0.0.1/podoal/db_get_visited_sight.php?member_id=" + member_id).get();
+            String result = dbConnector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_get_visited_sight.php?member_id=" + member_id).get();
             SetTxtListByResult(result);
         } catch (Exception e){
             e.printStackTrace();

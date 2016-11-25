@@ -1,29 +1,26 @@
 package com.android.podoal.project_podoal;
 
-import java.util.List;
-import java.util.Locale;
-
+import android.content.Context;
 import android.content.Intent;
 import android.location.Criteria;
-import android.location.LocationManager;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.widget.Button;
-import android.content.Context;
+import android.widget.Toast;
 
 import com.android.podoal.project_podoal.datamodel.SightDTO;
 import com.android.podoal.project_podoal.datamodel.VisitedSightDTO;
+import com.android.podoal.project_podoal.dataquery.FileUploader;
 import com.android.podoal.project_podoal.dataquery.InsertQueryGetter;
 import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import android.location.LocationListener;
-import android.widget.Toast;
-
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -31,6 +28,9 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener{
 
@@ -47,6 +47,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private double longitude;
     private double latitude;
 
+    static final int REQUEST_CAMERA = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,6 +58,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         dbSelector = new SelectQueryGetter();
+        sightList = new ArrayList<>();
 
         sightSetup();
         cameraSetup();
@@ -66,20 +69,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void sightSetup() {
         try {
-            String result = dbSelector.execute("http://localhost/podoal/db_get_sight_list.php").get();
+            String result = dbSelector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_get_sight_list.php").get();
+            System.out.println("RESULT : " + result);
 
             try {
                 JSONObject jsonObject = new JSONObject(result);
-                JSONArray jsonArray = jsonObject.getJSONArray("results");
+                JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                 for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject entity = jsonArray.getJSONObject(i);
                     SightDTO dto = new SightDTO();
 
                     dto.setSight_id(entity.getString("sight_id"));
-                    dto.setLatitude(entity.getLong("latitude"));
-                    dto.setLongitude(entity.getLong("longitude"));
-                    dto.setRadius(entity.getLong("radius"));
+                    dto.setLatitude(entity.getDouble("latitude"));
+                    dto.setLongitude(entity.getDouble("longitude"));
+                    dto.setRadius(entity.getDouble("radius"));
                     dto.setName(entity.getString("name"));
                     dto.setInfo(entity.getString("info"));
                     dto.setLocal_number_ID(entity.getString("local_number_ID"));
@@ -94,7 +98,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } catch (Exception e){
             e.printStackTrace();
         } finally {
-
+            System.out.println("FINAL");
         }
     }
 
@@ -138,7 +142,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onClick(View v)
             {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(intent,1);
+                startActivityForResult(intent,REQUEST_CAMERA);
             }
         });
 
@@ -155,14 +159,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * installed Google Play services and returned to the app.
      */
     @Override
-    public void onMapReady(GoogleMap googleMap)
-    {
+    public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
         LatLng seoul = new LatLng(37.56, 126.97);
-        mMap.addMarker(new MarkerOptions().position(seoul).title("Marker in Seoul"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(seoul));
+        mMap.addMarker( new MarkerOptions().position(seoul).title( "Marker in Seoul" ) );
+        mMap.moveCamera( CameraUpdateFactory.newLatLng(seoul));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(seoul, 12));
 
         if( sightList != null)
@@ -185,10 +188,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        switch (resultCode) {
-            case 1:
-                if (location == null)
-                {
+        switch (requestCode) {
+            case REQUEST_CAMERA:
+
+                if (resultCode != RESULT_OK || data == null) {
+                    Toast.makeText(this, "카메라에서 사진 정보를 가져올 수 없습니다.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (location == null) {
                     Toast.makeText(this, "현재 위치를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -198,45 +206,58 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     if (matchedSight != null)
                     {
-                        InsertQueryGetter dbConnector = new InsertQueryGetter();
-                        VisitedSightDTO visitedSightDTO = new VisitedSightDTO();
+                        try {
+                            dbSelector = new SelectQueryGetter();
+                            InsertQueryGetter dbConnector = new InsertQueryGetter();
+                            String maxVisitedId = dbSelector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_get_max_visit_sight_id.php").get();
+                            Toast.makeText(this, maxVisitedId, Toast.LENGTH_SHORT).show();
+                            VisitedSightDTO visitedSightDTO = new VisitedSightDTO();
 
-                        visitedSightDTO.setMember_id("tester");
-                        visitedSightDTO.setSight_id(matchedSight.getSight_id());
-                        String postData = visitedSightDTO.makePostData();
+                            visitedSightDTO.setMember_id("2011003155");
+                            visitedSightDTO.setSight_id(matchedSight.getSight_id());
+                            visitedSightDTO.setVisited_id(Integer.parseInt(maxVisitedId));
+                            String postData = visitedSightDTO.makePostData();
+                            System.out.println("postData : " + postData);
 
-                        try
-                        {
-                            String result = dbConnector.execute("http://localhost/podoal/d " +
-                                    "b_insert_visited_sight.php", postData).get();
+                            FileUploader fileUploader = new FileUploader();
 
-                            if (result != null)
-                                Toast.makeText(this, "Insert Visited Sight Info Failed", Toast.LENGTH_SHORT).show();
-                            else
-                                Toast.makeText(this, "Insert Visited Sight Info Success", Toast.LENGTH_SHORT).show();
+                            Boolean bUploadSuccess = fileUploader.execute(data.getData().toString(),maxVisitedId).get();
 
-                        }
-                        catch (Exception e)
-                        {
-                            Toast.makeText(this, "DB Connect Failed", Toast.LENGTH_SHORT).show();
+                            if (!bUploadSuccess.booleanValue())
+                            {
+                                Toast.makeText(this, "사진 업로드에 실패 했습니다..", Toast.LENGTH_SHORT).show();
+                                //return;
+                            }
+
+                            String result = dbConnector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_insert_visited_sight.php", postData).get();
+
+                            if (result != null) {
+                                Toast.makeText(this, "result isn't null : " + result, Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(this, "result is null", Toast.LENGTH_SHORT).show();
+                            }
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(this, "Error!", Toast.LENGTH_SHORT).show();
                         }
                     }
                     else
                     {
-                        Toast.makeText(this, "No Sight", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "matchedSight is null", Toast.LENGTH_SHORT).show();
                     }
                 }
                 break;
             default:
-                Toast.makeText(this, "resule Code" + Integer.toString(resultCode), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Default", Toast.LENGTH_SHORT).show();
                 break;
         }
     }
 
     private class Circle {
-        public float x;
-        public float y;
-        public float r;
+        public double x;
+        public double y;
+        public double r;
     }
 
     private SightDTO ValidateSight() {

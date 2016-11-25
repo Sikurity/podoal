@@ -7,9 +7,9 @@ package com.android.podoal.project_podoal.datamodel;
 public class SightDTO {
 
     private String sight_id;
-    private float latitude;
-    private float longitude;
-    private float radius;
+    private double latitude;
+    private double longitude;
+    private double radius;
 
     private String name;
     private String info;
@@ -38,27 +38,27 @@ public class SightDTO {
         this.sight_id = sight_id;
     }
 
-    public float getLatitude() {
+    public double getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(float latitude) {
+    public void setLatitude(double latitude) {
         this.latitude = latitude;
     }
 
-    public float getLongitude() {
+    public double getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(float longitude) {
+    public void setLongitude(double longitude) {
         this.longitude = longitude;
     }
 
-    public float getRadius() {
+    public double getRadius() {
         return radius;
     }
 
-    public void setRadius(float radius) {
+    public void setRadius(double radius) {
         this.radius = radius;
     }
 
