@@ -69,8 +69,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void sightSetup() {
         try {
-            String result = dbSelector.execute("http://127.0.0.1/podoal/db_get_sight_list.php").get();
-            System.out.println(result);
+            String result = dbSelector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_get_sight_list.php").get();
+            System.out.println("RESULT : " + result);
+
             try {
                 JSONObject jsonObject = new JSONObject(result);
                 JSONArray jsonArray = jsonObject.getJSONArray("result");
@@ -97,7 +98,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } catch (Exception e){
             e.printStackTrace();
         } finally {
-
+            System.out.println("FINAL");
         }
     }
 
@@ -167,17 +168,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.moveCamera( CameraUpdateFactory.newLatLng(seoul));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(seoul, 12));
 
-        for (int i = 0; i < sightList.size(); i++) {
-            SightDTO dto = sightList.get(i);
-
-            System.out.println(dto.toString());
-            mMap.addMarker(new MarkerOptions().position(new LatLng(dto.getLatitude(), dto.getLongitude()))
-                                                .title(dto.getName()));
+        if( sightList != null)
+        {
+            for (int i = 0; i < sightList.size(); i++)
+            {
+                SightDTO dto = sightList.get(i);
+                mMap.addMarker(new MarkerOptions().position(new LatLng(dto.getLatitude(), dto.getLongitude())).title(dto.getName()));
+            }
         }
 
-        mMap.addMarker(new MarkerOptions()
-                .position(new LatLng(37.555873, 127.049488))
-                .title("Hanyang Univ. IT/BT"));
+        mMap.addMarker
+                (
+                        new MarkerOptions()
+                                .position(new LatLng(37.555873, 127.049488))
+                                .title("Hanyang Univ. IT/BT")
+                );
     }
 
     @Override
@@ -194,48 +199,57 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (location == null) {
                     Toast.makeText(this, "현재 위치를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
                     return;
-                } else {
+                }
+                else
+                {
                     SightDTO matchedSight = ValidateSight();
 
-                    if (matchedSight != null) {
-
+                    if (matchedSight != null)
+                    {
                         try {
+                            dbSelector = new SelectQueryGetter();
                             InsertQueryGetter dbConnector = new InsertQueryGetter();
-                            String maxVisitedId = dbSelector.execute("http://127.0.0.1/podoal/db_get_max_visit_sight_id.php").get();
+                            String maxVisitedId = dbSelector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_get_max_visit_sight_id.php").get();
+                            Toast.makeText(this, maxVisitedId, Toast.LENGTH_SHORT).show();
                             VisitedSightDTO visitedSightDTO = new VisitedSightDTO();
 
-                            visitedSightDTO.setMember_id("tester");
+                            visitedSightDTO.setMember_id("2011003155");
                             visitedSightDTO.setSight_id(matchedSight.getSight_id());
                             visitedSightDTO.setVisited_id(Integer.parseInt(maxVisitedId));
                             String postData = visitedSightDTO.makePostData();
+                            System.out.println("postData : " + postData);
 
                             FileUploader fileUploader = new FileUploader();
 
                             Boolean bUploadSuccess = fileUploader.execute(data.getData().toString(),maxVisitedId).get();
 
-                            if (!bUploadSuccess.booleanValue()) {
+                            if (!bUploadSuccess.booleanValue())
+                            {
                                 Toast.makeText(this, "사진 업로드에 실패 했습니다..", Toast.LENGTH_SHORT).show();
-                                return;
+                                //return;
                             }
 
-                            String result = dbConnector.execute("http://127.0.0.1/podoal/db_insert_visited_sight.php", postData).get();
+                            String result = dbConnector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_insert_visited_sight.php", postData).get();
 
                             if (result != null) {
-
+                                Toast.makeText(this, "result isn't null : " + result, Toast.LENGTH_SHORT).show();
                             } else {
-
+                                Toast.makeText(this, "result is null", Toast.LENGTH_SHORT).show();
                             }
 
                         } catch (Exception e) {
-
+                            e.printStackTrace();
+                            Toast.makeText(this, "Error!", Toast.LENGTH_SHORT).show();
                         }
-
-                    } else {
-
+                    }
+                    else
+                    {
+                        Toast.makeText(this, "matchedSight is null", Toast.LENGTH_SHORT).show();
                     }
                 }
                 break;
             default:
+                Toast.makeText(this, "Default", Toast.LENGTH_SHORT).show();
                 break;
         }
     }
