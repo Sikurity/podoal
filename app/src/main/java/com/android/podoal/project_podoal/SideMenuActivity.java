@@ -19,6 +19,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 
+import com.google.android.gms.maps.SupportMapFragment;
+
 public class SideMenuActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -50,16 +52,6 @@ public class SideMenuActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-        fragmentClass = MapsActivity.class;
-        try {
-            fragment = (Fragment) fragmentClass.newInstance();
-
-            fragmentManager = getSupportFragmentManager();
-            fragmentManager.beginTransaction().replace(R.id.flContent, fragment).commit();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -101,19 +93,20 @@ public class SideMenuActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        boolean bFragmentChage = false;
+        boolean bFragmentChange = false;
 
         if (id == R.id.nav_camera) {
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
 
-            fragmentClass = MapsActivity.class;
-            bFragmentChage = true;
+           fragment = (SupportMapFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.map);
+            bFragmentChange = true;
 
         } else if (id == R.id.nav_slideshow) {
 
             fragmentClass = ShowVisitedSightActivity.class;
-            bFragmentChage = true;
+            bFragmentChange = true;
 
         } else if (id == R.id.nav_manage) {
 
@@ -123,13 +116,13 @@ public class SideMenuActivity extends AppCompatActivity
 
         }
 
-        if (bFragmentChage) {
+        if (bFragmentChange) {
             try {
-                fragment = (Fragment) fragmentClass.newInstance();
-
+                //fragment = (Fragment) fragmentClass.newInstance();
+/*
                 fragmentManager = getSupportFragmentManager();
                 fragmentManager.beginTransaction().replace(R.id.flContent, fragment).commit();
-
+*/
             } catch (Exception e) {
                 e.printStackTrace();
             }
