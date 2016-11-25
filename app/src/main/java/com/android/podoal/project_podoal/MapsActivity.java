@@ -162,7 +162,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Add a marker in Sydney and move the camera
         LatLng seoul = new LatLng(37.56, 126.97);
         mMap.addMarker(new MarkerOptions().position(seoul).title("Marker in Seoul"));
-        mMap.moveCamera( CameraUpdateFactory.newLatLng(seoul));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(seoul));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(seoul, 12));
 
         if( sightList != null)
@@ -207,7 +207,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                         try
                         {
-                            String result = dbConnector.execute("http://localhost/podoal/db_insert_visited_sight.php", postData).get();
+                            String result = dbConnector.execute("http://localhost/podoal/d " +
+                                    "b_insert_visited_sight.php", postData).get();
 
                             if (result != null)
                                 Toast.makeText(this, "Insert Visited Sight Info Failed", Toast.LENGTH_SHORT).show();

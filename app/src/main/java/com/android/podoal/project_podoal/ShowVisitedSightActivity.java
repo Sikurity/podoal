@@ -54,11 +54,13 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
         Date visited_date;
         int visited_id;
 
-        try {
+        try
+        {
             JSONObject jsonObject = new JSONObject(result);
             JSONArray jsonArray = jsonObject.getJSONArray("results");
 
-            for (int i = 0; i < jsonArray.length(); i++) {
+            for (int i = 0; i < jsonArray.length(); i++)
+            {
                 JSONObject entity = jsonArray.getJSONObject(i);
 
                 member_id = (entity.getString("member_id"));
@@ -66,10 +68,17 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
                 visited_date = (Date.valueOf(entity.getString("visited_date")));
                 visited_id = (entity.getInt("visited_id"));
 
-                visitedSightList.add(new VisitedSightDTO(member_id,
-                        sight_id,
-                        visited_date,
-                        visited_id));
+                visitedSightList.add
+                    (
+                        new VisitedSightDTO
+                            (
+                                member_id,
+                                sight_id,
+                                visited_date,
+                                visited_id,
+                                ""
+                            )
+                    );
             }
 
         } catch (JSONException e) {
