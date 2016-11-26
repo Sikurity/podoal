@@ -64,7 +64,7 @@ public class KakaoSignupActivity extends Activity{
     }
 
     private void redirectMainActivity() {
-        startActivity(new Intent(this, MapsActivity.class));
+        startActivity(new Intent(this, SideMenuActivity .class));
         finish();
     }
 

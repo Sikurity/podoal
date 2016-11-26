@@ -17,7 +17,7 @@ import com.kakao.auth.KakaoSDK;
  */
 public class GlobalApplication extends android.support.multidex.MultiDexApplication
 {
-    public static final String SERVER_IP_ADDR = "192.168.137.165";
+    public static final String SERVER_IP_ADDR = "192.168.137.1";
     public static final String SERVER_IP_PORT = "80";
 
     private static volatile GlobalApplication instance = null;

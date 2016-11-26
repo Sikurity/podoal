@@ -43,20 +43,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".KakaoSignupActivity"
             android:label="@string/title_activity_kakao_signup">
         </activity>
         <activity
-            android:name=".MapsActivity"
-            android:label="@string/title_activity_maps">
-        </activity>
-        <activity
             android:name=".SideMenuActivity"
             android:label="@string/title_activity_side_menu"
-            android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".ShowVisitedSightActivity"></activity>
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+            android:name=".ShowVisitedSightActivity">
+        </activity>
     </application>
 
 </manifest>

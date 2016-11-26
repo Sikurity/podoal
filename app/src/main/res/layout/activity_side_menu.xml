@@ -7,24 +7,11 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     tools:openDrawer="start">
-        <include
-            layout="@layout/activity_main"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/content_include"/>
- <!--
-    <LinearLayout
+    <include
+        layout="@layout/activity_main"
+        android:id="@+id/content_include"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-
-        <FrameLayout
-            android:id="@+id/flContent"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-    </LinearLayout>
--->
-
+        android:layout_height="match_parent"/>
     <android.support.design.widget.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
@@ -33,5 +20,4 @@
         android:fitsSystemWindows="true"
         app:headerLayout="@layout/nav_header_side_menu"
         app:menu="@menu/activity_side_menu_drawer" />
-
 </android.support.v4.widget.DrawerLayout>

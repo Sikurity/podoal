@@ -7,10 +7,9 @@
 
     <fragment
         android:id="@+id/map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:name="com.android.podoal.project_podoal.MapsFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="com.android.podoal.project_podoal.MapsActivity"
         />
 
     <Button

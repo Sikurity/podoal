@@ -1,39 +1,54 @@
 package com.android.podoal.project_podoal;
 
+import android.location.Location;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
-import android.text.Layout;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.provider.MediaStore;
+import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewGroup;
+import android.content.Intent;
+import android.widget.Button;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.SupportMapFragment;
 
-public class SideMenuActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+import com.android.podoal.project_podoal.datamodel.SightDTO;
+import com.android.podoal.project_podoal.datamodel.VisitedSightDTO;
+import com.android.podoal.project_podoal.dataquery.FileUploader;
+import com.android.podoal.project_podoal.dataquery.InsertQueryGetter;
+import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
 
+import java.util.List;
+
+public class SideMenuActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener
+{
     FragmentManager fragmentManager;
     Fragment fragment = null;
     Class fragmentClass = null;
 
+    private List<SightDTO> sightList;
+    private Location location;
+    private SelectQueryGetter dbSelector;
+
+    static final int REQUEST_CAMERA = 1;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        System.out.println("SIDE_MENU_ACTIVITY_ON_CREATE_BEGIN");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_side_menu);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        sightList = MapsFragment.getSightList();
 
         /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -52,6 +67,9 @@ public class SideMenuActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        cameraSetup();
+        System.out.println("SIDE_MENU_ACTIVITY_ON_CREATE_END");
     }
 
     @Override
@@ -99,8 +117,7 @@ public class SideMenuActivity extends AppCompatActivity
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
 
-           fragment = (SupportMapFragment) getSupportFragmentManager()
-                    .findFragmentById(R.id.map);
+           fragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
             bFragmentChange = true;
 
         } else if (id == R.id.nav_slideshow) {
@@ -131,5 +148,122 @@ public class SideMenuActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void cameraSetup()
+    {
+        System.out.println("CAMERA_SETUP_BEGIN");
+        Button camera_btn = (Button)this.findViewById(R.id.content_include).findViewById(R.id.camera_button);
+
+        camera_btn.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(intent,REQUEST_CAMERA);
+            }
+        });
+        System.out.println("CAMERA_SETUP_END");
+    }
+
+    private class Circle {
+        public double x;
+        public double y;
+        public double r;
+    }
+
+    private SightDTO ValidateSight()
+    {
+        double latitude = MapsFragment.getLatitude();
+        double longitude = MapsFragment.getLongitude();
+
+        Circle c = new Circle();
+
+        for (int i = 0; i < sightList.size(); i++) {
+            SightDTO sight = sightList.get(i);
+
+            c.x = sight.getLatitude();
+            c.y = sight.getLongitude();
+            c.r = sight.getRadius();
+
+            if (((  (longitude - c.x) * (latitude - c.x)) +
+                    ((longitude - c.y) * (longitude - c.y))) < (c.r * c.r)) {
+                return sight;
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        location = MapsFragment.getLocation();
+        dbSelector = MapsFragment.getDbSelector();
+        switch (requestCode) {
+            case REQUEST_CAMERA:
+
+                if (resultCode != this.RESULT_OK || data == null) {
+                    Toast.makeText(this, "카메라에서 사진 정보를 가져올 수 없습니다.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (location == null) {
+                    Toast.makeText(this, "현재 위치를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                else
+                {
+                    SightDTO matchedSight = ValidateSight();
+
+                    if (matchedSight != null)
+                    {
+                        try {
+                            dbSelector = new SelectQueryGetter();
+                            InsertQueryGetter dbConnector = new InsertQueryGetter();
+                            String maxVisitedId = dbSelector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_get_max_visit_sight_id.php").get();
+                            Toast.makeText(this, maxVisitedId, Toast.LENGTH_SHORT).show();
+                            VisitedSightDTO visitedSightDTO = new VisitedSightDTO();
+
+                            visitedSightDTO.setMember_id("2011003155");
+                            visitedSightDTO.setSight_id(matchedSight.getSight_id());
+                            visitedSightDTO.setVisited_id(Integer.parseInt(maxVisitedId));
+                            String postData = visitedSightDTO.makePostData();
+                            System.out.println("postData : " + postData);
+
+                            FileUploader fileUploader = new FileUploader();
+
+                            Boolean bUploadSuccess = fileUploader.execute(data.getData().toString(),maxVisitedId).get();
+
+                            if (!bUploadSuccess.booleanValue())
+                            {
+                                Toast.makeText(this, "사진 업로드에 실패 했습니다..", Toast.LENGTH_SHORT).show();
+                                //return;
+                            }
+
+                            String result = dbConnector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_insert_visited_sight.php", postData).get();
+
+                            if (result != null) {
+                                Toast.makeText(this, "result isn't null : " + result, Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(this, "result is null", Toast.LENGTH_SHORT).show();
+                            }
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(this, "Error!", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    else
+                    {
+                        Toast.makeText(this, "matchedSight is null", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                break;
+            default:
+                Toast.makeText(this, "Default", Toast.LENGTH_SHORT).show();
+                break;
+        }
     }
 }
