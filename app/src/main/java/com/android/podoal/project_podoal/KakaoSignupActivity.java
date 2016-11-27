@@ -68,12 +68,9 @@ public class KakaoSignupActivity extends Activity{
                 try {
                     MemberInfo memberInfo = MemberInfo.getInstance();
 
-                    JSONObject jsonObject = new JSONObject(userProfile.toString());
-
                     memberInfo.setId(Long.toString(userProfile.getId()));
-                    memberInfo.setProfile_image(new URL(jsonObject.getString("profile_image")));
-                    memberInfo.setThumbnail_image(new URL(jsonObject.getString("thumbnail_image")));
-                    memberInfo.setCreated((Date.valueOf(jsonObject.getString("created"))));
+                    memberInfo.setProfile_image(new URL(userProfile.getProfileImagePath()));
+                    memberInfo.setThumbnail_image(new URL(userProfile.getThumbnailImagePath()));
 
                 } catch (Exception e) {
                     e.printStackTrace();
