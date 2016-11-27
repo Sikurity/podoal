@@ -1,6 +1,5 @@
 package com.android.podoal.project_podoal.arrayAdapter;
 
-import android.app.Activity;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,14 +13,12 @@ import com.google.android.gms.maps.model.Marker;
  * Created by tj on 2016-11-27.
  */
 
-public class SightInfoAdapter extends Activity implements GoogleMap.InfoWindowAdapter {
+public class SightInfoAdapter implements GoogleMap.InfoWindowAdapter {
 
     View mView;
-    LayoutInflater layoutInflater;
 
-    public SightInfoAdapter () {
-        layoutInflater = getLayoutInflater();
-        this.mView = (View)layoutInflater.inflate(R.layout.window_sight_info, null);
+    public SightInfoAdapter (final Context context) {
+        this.mView = (View)((LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.window_sight_info, null);
     }
 
     @Override

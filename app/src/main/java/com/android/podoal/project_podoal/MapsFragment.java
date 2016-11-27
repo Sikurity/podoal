@@ -171,7 +171,7 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        mMap.setInfoWindowAdapter(new SightInfoAdapter());
+        mMap.setInfoWindowAdapter(new SightInfoAdapter(this.getContext()));
 
         // Add a marker in Sydney and move the camera
         LatLng seoul = new LatLng(37.56, 126.97);
