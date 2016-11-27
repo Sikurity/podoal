@@ -20,6 +20,10 @@
         android:text="TextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/info_sight_info" />
+        android:id="@+id/info_sight_info"
+        android:layout_below="@+id/info_sight_name"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="15dp" />
 
 </RelativeLayout>

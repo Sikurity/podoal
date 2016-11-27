@@ -175,7 +175,11 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
         }
         else if (id == R.id.nav_gallery)
         {
-
+            Uri uri = Uri.parse("content://media/external/images/media");
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            intent.setType("image/*");
+            startActivityForResult(intent, 0);
         }
         else if (id == R.id.nav_setting) {
 

@@ -1,12 +1,9 @@
 package com.android.podoal.project_podoal;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
+import android.view.Window;
 import android.widget.TextView;
 
 public class MapInfoActivity extends Activity {
@@ -18,6 +15,7 @@ public class MapInfoActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_map_info);
 
         txt_sight_name = (TextView) findViewById(R.id.info_sight_name);
@@ -27,12 +25,11 @@ public class MapInfoActivity extends Activity {
 
         String sight_name = intent.getStringExtra("sight_name");
         String sight_info = intent.getStringExtra("sight_info");
-
         setTextView(sight_name,sight_info);
     }
 
     public void setTextView(String sight_name, String sight_info) {
-        this.txt_sight_name.setText(sight_name);
-        this.txt_sight_info.setText(sight_info);
+        this.txt_sight_name.setText("<관광지 명>\n" + sight_name);
+        this.txt_sight_info.setText("<소개글>\n" + sight_info);
     }
 }

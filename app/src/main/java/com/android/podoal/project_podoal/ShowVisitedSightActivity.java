@@ -1,16 +1,15 @@
 package com.android.podoal.project_podoal;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.support.v4.widget.TextViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import com.android.podoal.project_podoal.arrayAdapter.VisitedSightAdapter;
@@ -22,42 +21,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.InputStream;
 import java.sql.Date;
 import java.util.ArrayList;
 
-public class ShowVisitedSightActivity extends AppCompatActivity
-{
+public class ShowVisitedSightActivity extends AppCompatActivity {
+
     private ArrayList<VisitedSightDTO> visitedSightList = new ArrayList<VisitedSightDTO>();
     SelectQueryGetter dbConnector;
     ListView listView;
     VisitedSightAdapter arrayAdapter;
-
-    private class DownloadImageTask extends AsyncTask<String, Void, Bitmap>
-    {
-        ImageView bmImage;
-
-        public DownloadImageTask(ImageView bmImage) {
-            this.bmImage = bmImage;
-        }
-
-        protected Bitmap doInBackground(String... urls) {
-            String urldisplay = urls[0];
-            Bitmap mIcon11 = null;
-            try {
-                InputStream in = new java.net.URL(urldisplay).openStream();
-                mIcon11 = BitmapFactory.decodeStream(in);
-            } catch (Exception e) {
-                Log.e("Error", e.getMessage());
-                e.printStackTrace();
-            }
-            return mIcon11;
-        }
-
-        protected void onPostExecute(Bitmap result) {
-            bmImage.setImageBitmap(result);
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,6 +84,17 @@ public class ShowVisitedSightActivity extends AppCompatActivity
 
             arrayAdapter = new VisitedSightAdapter(this,R.layout.visited_sight_item,visitedSightList);
             listView.setAdapter(arrayAdapter);
+
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    int visited_id = visitedSightList.get(position).getVisited_id();
+
+                    System.out.println(visited_id);
+
+                    String filePath = "http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/uploads/" + visited_id + ".jpg";
+                }
+            });
 
         } catch (JSONException e) {
             e.printStackTrace();
