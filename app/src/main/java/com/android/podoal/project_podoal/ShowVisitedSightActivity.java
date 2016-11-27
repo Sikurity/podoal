@@ -1,12 +1,16 @@
 package com.android.podoal.project_podoal;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.support.v4.widget.TextViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,6 +25,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.sql.Date;
 import java.util.ArrayList;
 
@@ -93,6 +98,26 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
                     System.out.println(visited_id);
 
                     String filePath = "http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/uploads/" + visited_id + ".jpg";
+
+                    File imageFile = new File(filePath);
+
+                    if(imageFile.exists()){
+
+                        Bitmap myBitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+
+                        ImageView imageView = new ImageView(getApplicationContext());
+
+                        imageView.setImageBitmap(myBitmap);
+
+                        /* 토스트에 뷰 셋팅하기 xml 통째로 넣어도 됨 */
+                        Toast toast = new Toast(getApplicationContext());
+                        toast.setView(imageView);
+                        //위치 지정
+                        toast.setGravity(Gravity.CENTER,50,50);
+                        //여백 지정
+                        toast.setMargin(1000, 1000);
+                        toast.show();
+                    }
                 }
             });
 
