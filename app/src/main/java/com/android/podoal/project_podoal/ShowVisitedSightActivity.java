@@ -58,7 +58,7 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
 
         try {
             JSONObject jsonObject = new JSONObject(result);
-            JSONArray jsonArray = jsonObject.getJSONArray("results");
+            JSONArray jsonArray = jsonObject.getJSONArray("result");
 
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject entity = jsonArray.getJSONObject(i);

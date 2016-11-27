@@ -141,7 +141,23 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
 
         try
         {
-            location = locationManager.getLastKnownLocation(lmProvider);
+            locationManager = (LocationManager)getActivity().getSystemService(Context.LOCATION_SERVICE);
+            List<String> providers = locationManager.getProviders(true);
+            Location bestLocation = null;
+            for (String provider : providers) {
+
+                Location l = locationManager.getLastKnownLocation(provider);
+                if (l == null) {
+                    continue;
+                }
+                if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
+                    // Found best last known location: %s", l);
+                    bestLocation = l;
+                }
+            }
+
+//            location = locationManager.getLastKnownLocation(lmProvider);
+            location = bestLocation;
         }
         catch (SecurityException e)
         {
@@ -168,7 +184,8 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
      * installed Google Play services and returned to the app.
      */
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(GoogleMap googleMap)
+    {
         mMap = googleMap;
 
         mMap.setInfoWindowAdapter(new SightInfoAdapter(this.getContext()));
@@ -178,8 +195,6 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
         mMap.moveCamera( CameraUpdateFactory.newLatLng(seoul));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(seoul, 12));
 
-        mMap.addMarker( new MarkerOptions().position(seoul).title( "Marker in Seoul" ) );
-        mMap.addMarker(new MarkerOptions().position(new LatLng(37.555873, 127.049488)).title("Hanyang Univ. IT/BT"));
 
         if( sightList != null)
         {

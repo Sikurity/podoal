@@ -1,6 +1,7 @@
 package com.android.podoal.project_podoal;
 
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -26,6 +27,8 @@ import com.android.podoal.project_podoal.dataquery.FileUploader;
 import com.android.podoal.project_podoal.dataquery.InsertQueryGetter;
 import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
 
+import java.net.URI;
+import java.net.URL;
 import java.util.List;
 
 public class SideMenuActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener
@@ -113,37 +116,31 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
 
         boolean bFragmentChange = false;
 
-        if (id == R.id.nav_camera) {
+        if (id == R.id.nav_list)
+        {
+            Intent intent = new Intent(this, ShowVisitedSightActivity.class);
+            startActivity(intent);
             // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
+        }
+        else if (id == R.id.nav_gallery)
+        {
 
-           fragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-            bFragmentChange = true;
-
-        } else if (id == R.id.nav_slideshow) {
-
-            fragmentClass = ShowVisitedSightActivity.class;
-            bFragmentChange = true;
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
+        }
+        else if (id == R.id.nav_setting) {
 
         }
 
-        if (bFragmentChange) {
-            try {
-                //fragment = (Fragment) fragmentClass.newInstance();
-/*
-                fragmentManager = getSupportFragmentManager();
-                fragmentManager.beginTransaction().replace(R.id.flContent, fragment).commit();
-*/
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+//        if (bFragmentChange) {
+//            try {
+//                //fragment = (Fragment) fragmentClass.newInstance();
+///*
+//                fragmentManager = getSupportFragmentManager();
+//                fragmentManager.beginTransaction().replace(R.id.flContent, fragment).commit();
+//*/
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -187,8 +184,8 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
             c.y = sight.getLongitude();
             c.r = sight.getRadius();
 
-            if (((  (longitude - c.x) * (latitude - c.x)) +
-                    ((longitude - c.y) * (longitude - c.y))) < (c.r * c.r)) {
+            if (((  (longitude - c.x) * (latitude - c.x)) + ((longitude - c.y) * (longitude - c.y))) < (c.r * c.r))
+            {
                 return sight;
             }
         }
