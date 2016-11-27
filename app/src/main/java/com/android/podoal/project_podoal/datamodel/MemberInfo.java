@@ -15,7 +15,6 @@ public class MemberInfo {
     private String id;
     private URL profile_image;
     private URL thumbnail_image;
-    private Date created;
 
     private MemberInfo() {
 
@@ -51,13 +50,5 @@ public class MemberInfo {
 
     public void setThumbnail_image(URL thumbnail_image) {
         this.thumbnail_image = thumbnail_image;
-    }
-
-    public Date getCreated() {
-        return created;
-    }
-
-    public void setCreated(Date created) {
-        this.created = created;
     }
 }
