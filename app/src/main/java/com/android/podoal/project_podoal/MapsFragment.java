@@ -32,7 +32,7 @@ import java.util.List;
 
 public class MapsFragment extends SupportMapFragment implements OnMapReadyCallback, LocationListener{
 
-    private GoogleMap mMap;
+    private static GoogleMap mMap;
     private LocationManager locationManager;
     private String lmProvider;
 
@@ -225,19 +225,6 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
         mMap.moveCamera( CameraUpdateFactory.newLatLng(seoul));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(seoul, 12));
 
-
-        if( sightList != null)
-        {
-            for (int i = 0; i < sightList.size(); i++)
-            {
-                SightDTO dto = sightList.get(i);
-                if (dto.isVisitedSight(visitedSightList)) {
-                    mMap.addMarker(new MarkerOptions().position(new LatLng(dto.getLatitude(), dto.getLongitude())).title(dto.getName()).snippet(dto.getInfo()).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-                } else {
-                    mMap.addMarker(new MarkerOptions().position(new LatLng(dto.getLatitude(), dto.getLongitude())).title(dto.getName()).snippet(dto.getInfo()));
-                }
-            }
-        }
     }
 
     @Override
@@ -261,5 +248,23 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
     public void onStatusChanged(String provider, int status, Bundle extras)
     {
         // TODO Auto-generated method stub
+    }
+
+    public static void setMarkers(List<VisitedSightDTO> visitedSightList) {
+
+        mMap.clear();
+
+        if( sightList != null)
+        {
+            for (int i = 0; i < sightList.size(); i++)
+            {
+                SightDTO dto = sightList.get(i);
+                if (dto.isVisitedSight(visitedSightList)) {
+                    mMap.addMarker(new MarkerOptions().position(new LatLng(dto.getLatitude(), dto.getLongitude())).title(dto.getName()).snippet(dto.getInfo()).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+                } else {
+                    mMap.addMarker(new MarkerOptions().position(new LatLng(dto.getLatitude(), dto.getLongitude())).title(dto.getName()).snippet(dto.getInfo()));
+                }
+            }
+        }
     }
 }

@@ -288,6 +288,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
                             if (result != null) {
                                 Toast.makeText(this, "result isn't null : " + result, Toast.LENGTH_SHORT).show();
                                 visitedSightList.add(visitedSightDTO);
+                                MapsFragment.setMarkers(visitedSightList);
                             } else {
                                 Toast.makeText(this, "result is null", Toast.LENGTH_SHORT).show();
                             }
