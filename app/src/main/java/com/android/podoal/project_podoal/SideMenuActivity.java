@@ -228,7 +228,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
             c.y = sight.getLongitude();
             c.r = sight.getRadius();
 
-            if ((((  (longitude - c.x) * (latitude - c.x)) + ((longitude - c.y) * (longitude - c.y))) < (c.r * c.r)) && !sight.isVisitedSight(visitedSightList))
+            if ((((  (latitude - c.x) * (latitude - c.x)) + ((longitude - c.y) * (longitude - c.y))) < (c.r * c.r)) && !sight.isVisitedSight(visitedSightList))
             {
                 return sight;
             }

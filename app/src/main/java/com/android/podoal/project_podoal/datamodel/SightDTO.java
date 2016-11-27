@@ -28,7 +28,7 @@ public class SightDTO {
         this.longitude = dto.getLongitude();
         this.radius = dto.getRadius();
         this.name = dto.getName();
-        this.info = dto.getName();
+        this.info = dto.getInfo();
         this.local_number_ID = dto.getLocal_number_ID();
     }
 
