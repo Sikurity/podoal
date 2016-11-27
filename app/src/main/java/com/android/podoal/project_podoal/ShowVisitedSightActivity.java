@@ -19,6 +19,7 @@ import android.widget.Toast;
 import com.android.podoal.project_podoal.arrayAdapter.VisitedSightAdapter;
 import com.android.podoal.project_podoal.datamodel.MemberInfo;
 import com.android.podoal.project_podoal.datamodel.VisitedSightDTO;
+import com.android.podoal.project_podoal.dataquery.FileDownloader;
 import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
 
 import org.json.JSONArray;
@@ -28,6 +29,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 public class ShowVisitedSightActivity extends AppCompatActivity {
 
@@ -97,26 +99,28 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
 
                     System.out.println(visited_id);
 
-                    String filePath = "http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/uploads/" + visited_id + ".jpg";
+                    try {
 
-                    File imageFile = new File(filePath);
+                        FileDownloader fileDownloader = new FileDownloader();
 
-                    if(imageFile.exists()){
+                        Bitmap bitmap = fileDownloader.execute(Integer.toString(visited_id)).get();
 
-                        Bitmap myBitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+                        if(bitmap != null) {
+                            ImageView imageView = new ImageView(getApplicationContext());
 
-                        ImageView imageView = new ImageView(getApplicationContext());
-
-                        imageView.setImageBitmap(myBitmap);
+                            imageView.setImageBitmap(bitmap);
 
                         /* 토스트에 뷰 셋팅하기 xml 통째로 넣어도 됨 */
-                        Toast toast = new Toast(getApplicationContext());
-                        toast.setView(imageView);
-                        //위치 지정
-                        toast.setGravity(Gravity.CENTER,50,50);
-                        //여백 지정
-                        toast.setMargin(1000, 1000);
-                        toast.show();
+                            Toast toast = new Toast(getApplicationContext());
+                            toast.setView(imageView);
+                            //위치 지정
+                            toast.setGravity(Gravity.CENTER,50,50);
+                            //여백 지정
+                            toast.setMargin(1000, 1000);
+                            toast.show();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             });
