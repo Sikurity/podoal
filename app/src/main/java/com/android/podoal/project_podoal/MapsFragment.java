@@ -1,6 +1,7 @@
 package com.android.podoal.project_podoal;
 
 import android.content.Context;
+import android.content.Intent;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -22,6 +23,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONArray;
@@ -228,6 +230,24 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(seoul, 12));
 
         setMarkers(visitedSightList);
+
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+
+            public boolean onMarkerClick(Marker marker) {
+
+                String sight_name = marker.getTitle();
+                String sight_info = marker.getSnippet();
+
+                Intent intent = new Intent(getActivity(), MapInfoActivity.class);
+
+                intent.putExtra("sight_name",sight_name);
+                intent.putExtra("sight_info",sight_info);
+
+                startActivity(intent);
+
+                return true;
+            }
+        });
 
     }
 

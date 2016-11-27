@@ -11,7 +11,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_INTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.ACCESS_FILE_LOCATION"  />
+    <uses-permission android:name="android.permission.ACCESS_FILE_LOCATION" />
 
     <application
         android:name=".GlobalApplication"
@@ -32,8 +32,8 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
-
-        <meta-data android:name="com.kakao.sdk.AppKey"
+        <meta-data
+            android:name="com.kakao.sdk.AppKey"
             android:value="@string/kakao_app_key" />
 
         <activity
@@ -41,20 +41,21 @@
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name=".KakaoSignupActivity"
-            android:label="@string/title_activity_kakao_signup">
-        </activity>
+            android:label="@string/title_activity_kakao_signup"></activity>
         <activity
             android:name=".SideMenuActivity"
             android:label="@string/title_activity_side_menu"
-            android:theme="@style/AppTheme.NoActionBar">
-        </activity>
-        <activity
-            android:name=".ShowVisitedSightActivity">
+            android:theme="@style/AppTheme.NoActionBar"></activity>
+        <activity android:name=".ShowVisitedSightActivity"></activity>
+        <activity android:name=".MapInfoActivity"
+            android:theme="@android:style/Theme.DeviceDefault.Light.Dialog">
+
         </activity>
     </application>
 
