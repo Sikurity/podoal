@@ -75,54 +75,47 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
         navigationView.setNavigationItemSelectedListener(this);
 
         cameraSetup();
-        checkLocationPermission();
+
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M) {
+            int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
+            if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                getLocationPermission();
+            }
+        }
+
         System.out.println("SIDE_MENU_ACTIVITY_ON_CREATE_END");
     }
 
-    private void checkLocationPermission(){
+    private void getLocationPermission(){
 
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M) {
+        // 다이어로그같은것을 띄워서 사용자에게 해당 권한이 필요한 이유에 대해 설명합니다
+        // 해당 설명이 끝난뒤 requestPermissions()함수를 호출하여 권한허가를 요청해야 합니다
+        if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
 
-            int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
+            AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+            dialog.setTitle("권한이 필요합니다.")
+                    .setMessage("이 기능을 사용하기 위해서는 단말기의 \"위치\" 권한이 필요합니다. 계속하시겠습니까?")
+                    .setPositiveButton("네", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
 
-            if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1000);
+                            }
 
-                Toast.makeText(this, "위치 권한이 존재하지 않습니다.", Toast.LENGTH_SHORT).show();
-
-                // 이 권한을 필요한 이유를 설명해야하는가?
-                // 다이어로그같은것을 띄워서 사용자에게 해당 권한이 필요한 이유에 대해 설명합니다
-                // 해당 설명이 끝난뒤 requestPermissions()함수를 호출하여 권한허가를 요청해야 합니다
-                if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-
-                    AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-                    dialog.setTitle("권한이 필요합니다.")
-                            .setMessage("이 기능을 사용하기 위해서는 단말기의 \"위치\" 권한이 필요합니다. 계속하시겠습니까?")
-                            .setPositiveButton("네", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1000);
-                                    }
-
-                                }
-                            })
-                            .setNegativeButton("아니오", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    Toast.makeText(SideMenuActivity.this, "기능을 취소했습니다.", Toast.LENGTH_SHORT).show();
-                                }
-                            })
-                            .create()
-                            .show();
-                } else {
-                    // CALL_PHONE 권한을 Android OS 에 요청한다.
-                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1000);
-                }
-
-            }else{
-                Toast.makeText(this, "이미 존재하는 권한입니다.", Toast.LENGTH_SHORT).show();
-            }
+                        }
+                    })
+                    .setNegativeButton("아니오", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Toast.makeText(SideMenuActivity.this, "기능을 취소했습니다.", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .create()
+                    .show();
+        } else {
+            // CALL_PHONE 권한을 Android OS 에 요청한다.
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1000);
         }
     }
 
