@@ -20,9 +20,11 @@ import com.android.podoal.project_podoal.GlobalApplication;
 public class FileUploader
 {
     private String uploadFileName;
+    private String maxVisitedNum;
 
-    public FileUploader(String uploadFileName) {
+    public FileUploader(String uploadFileName, String maxVisitedNum) {
         this.uploadFileName = uploadFileName;
+        this.maxVisitedNum = maxVisitedNum;
     }
 
     public boolean upload(String ServerURL)
@@ -37,6 +39,7 @@ public class FileUploader
         int bytesRead, bytesAvailable, bufferSize;
         byte[] buffer;
         int maxBufferSize = 1 * 1024 * 1024;
+        String newName = maxVisitedNum + ".jpg";
         File sourceFile = new File(uploadFileName);
 
         if (!sourceFile.isFile())
@@ -63,12 +66,12 @@ public class FileUploader
                 conn.setRequestProperty("Connection", "Keep-Alive");
                 conn.setRequestProperty("ENCTYPE", "multipart/form-data");
                 conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
-                conn.setRequestProperty("uploaded_file", uploadFileName);
+                conn.setRequestProperty("uploaded_file", newName);
 
                 dos = new DataOutputStream(conn.getOutputStream());
 
                 dos.writeBytes(twoHyphens + boundary + lineEnd);
-                dos.writeBytes("Content-Disposition: form-data; name=\"uploaded_file\";filename=\"" + uploadFileName + "\"" + lineEnd);
+                dos.writeBytes("Content-Disposition: form-data; name=\"uploaded_file\";filename=\"" + newName + "\"" + lineEnd);
 
                 dos.writeBytes(lineEnd);
 

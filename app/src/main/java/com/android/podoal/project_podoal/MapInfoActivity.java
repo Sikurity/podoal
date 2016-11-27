@@ -1,5 +1,6 @@
 package com.android.podoal.project_podoal;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -8,7 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 
-public class MapInfoActivity extends AppCompatActivity {
+public class MapInfoActivity extends Activity {
 
     TextView txt_sight_info;
     TextView txt_sight_name;
@@ -16,6 +17,7 @@ public class MapInfoActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_map_info);
 
         txt_sight_name = (TextView) findViewById(R.id.info_sight_name);

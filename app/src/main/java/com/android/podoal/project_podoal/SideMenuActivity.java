@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -79,30 +80,35 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
         cameraSetup();
 
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M) {
-            int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
-            if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-                getLocationPermission();
+            int locPermissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
+            if (locPermissionCheck != PackageManager.PERMISSION_GRANTED) {
+                getPermission(Manifest.permission.ACCESS_FINE_LOCATION, "위치");
+            }
+
+            int filePermissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+            if (filePermissionCheck != PackageManager.PERMISSION_GRANTED) {
+                getPermission(Manifest.permission.READ_EXTERNAL_STORAGE, "파일접근");
             }
         }
 
         System.out.println("SIDE_MENU_ACTIVITY_ON_CREATE_END");
     }
 
-    private void getLocationPermission(){
+    private void getPermission(final String permissionName, String permissionNickname){
 
         // 다이어로그같은것을 띄워서 사용자에게 해당 권한이 필요한 이유에 대해 설명합니다
         // 해당 설명이 끝난뒤 requestPermissions()함수를 호출하여 권한허가를 요청해야 합니다
-        if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+        if (shouldShowRequestPermissionRationale(permissionName)) {
 
             AlertDialog.Builder dialog = new AlertDialog.Builder(this);
             dialog.setTitle("권한이 필요합니다.")
-                    .setMessage("이 기능을 사용하기 위해서는 단말기의 \"위치\" 권한이 필요합니다. 계속하시겠습니까?")
+                    .setMessage("이 기능을 사용하기 위해서는 단말기의 \"" + permissionNickname + "\" 권한이 필요합니다. 계속하시겠습니까?")
                     .setPositiveButton("네", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
 
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1000);
+                                requestPermissions(new String[]{permissionName}, 1000);
                             }
 
                         }
@@ -116,8 +122,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
                     .create()
                     .show();
         } else {
-            // CALL_PHONE 권한을 Android OS 에 요청한다.
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1000);
+            requestPermissions(new String[]{permissionName}, 1000);
         }
     }
 
@@ -279,12 +284,47 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
                             String postData = visitedSightDTO.makePostData();
                             System.out.println("postData : " + postData);
 
-                            Cursor cursor = getContentResolver().query(data.getData(), null, null, null, null );
+                            Uri uri = null;
+                            if( data.getData() == null ) // 될지 안될지 모름
+                            {
+                                String[] IMAGE_PROJECTION =
+                                {
+                                    MediaStore.Images.ImageColumns.DATA,
+                                    MediaStore.Images.ImageColumns._ID,
+                                };
+
+                                try
+                                {
+                                    Cursor cursorImages = getContentResolver().query(
+                                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                                            IMAGE_PROJECTION, null, null,null);
+                                    if (cursorImages != null && cursorImages.moveToLast())
+                                    {
+                                        uri = Uri.parse(cursorImages.getString(0)); //경로
+                                        System.out.println("uri1 : " + uri.toString());
+                                        //int id = cursorImages.getInt(1); //아이디
+                                        cursorImages.close(); // 커서 사용이 끝나면 꼭 닫아준다.
+                                    }
+                                    else
+                                        System.out.println("ㅠㅠ");
+                                }
+                                catch(Exception e)
+                                {
+                                    e.printStackTrace();
+                                }
+                            }
+                            else
+                            {
+                                uri = data.getData();
+                                System.out.println("uri2 : " + uri.toString());
+                            }
+
+                            Cursor cursor = getContentResolver().query(uri, null, null, null, null );
                             cursor.moveToNext();
                             String filepath = cursor.getString( cursor.getColumnIndex( "_data" ) );
                             cursor.close();
 
-                            new Thread(new FileUploadRunnable(filepath)).start();
+                            new Thread(new FileUploadRunnable(filepath, maxVisitedId)).start();
 
                             String result = dbConnector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_insert_visited_sight.php", postData).get();
 
