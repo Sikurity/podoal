@@ -21,7 +21,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.android.podoal.project_podoal.datamodel.MemberInfo;
@@ -195,7 +195,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
     private void cameraSetup()
     {
         System.out.println("CAMERA_SETUP_BEGIN");
-        Button camera_btn = (Button)this.findViewById(R.id.content_include).findViewById(R.id.camera_button);
+        ImageButton camera_btn = (ImageButton)this.findViewById(R.id.content_include).findViewById(R.id.camera_button);
 
         camera_btn.setOnClickListener(new View.OnClickListener()
         {
