@@ -48,9 +48,8 @@ public class VisitedSightAdapter extends BaseAdapter {
     @Override
     public View getView(int i, View convertView, ViewGroup parent) {
 
-        if(convertView==null){
+        if(convertView==null)
             convertView=inflater.inflate(layout,parent,false);
-        }
 
         VisitedSightDTO item = visitedSightList.get(i);
 
@@ -60,8 +59,6 @@ public class VisitedSightAdapter extends BaseAdapter {
         TextView visitedSight = (TextView)convertView.findViewById(R.id.visited_sight);
         visitedSight.setText(item.getSight_name());
 
-
-
-        return null;
+        return convertView;
     }
 }

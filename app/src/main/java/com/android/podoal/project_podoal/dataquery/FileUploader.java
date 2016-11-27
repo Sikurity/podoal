@@ -1,6 +1,8 @@
 package com.android.podoal.project_podoal.dataquery;
 
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
+import android.provider.MediaStore;
 import android.util.Log;
 
 import java.io.DataOutputStream;
@@ -28,6 +30,8 @@ public class FileUploader extends AsyncTask<String,Void,Boolean> {
         String filePath = params[0];
         String fileId   = params[1];
         String uploadName = fileId + ".jpg";
+
+        System.out.println(filePath + " " + uploadName);
 
         int bytesRead, bytesAvailable, bufferSize;
         byte[] buffer;

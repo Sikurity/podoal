@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.android.podoal.project_podoal.arrayAdapter.SightInfoAdapter;
 import com.android.podoal.project_podoal.datamodel.SightDTO;
 import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -140,7 +141,23 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
 
         try
         {
-            location = locationManager.getLastKnownLocation(lmProvider);
+            locationManager = (LocationManager)getActivity().getSystemService(Context.LOCATION_SERVICE);
+            List<String> providers = locationManager.getProviders(true);
+            Location bestLocation = null;
+            for (String provider : providers) {
+
+                Location l = locationManager.getLastKnownLocation(provider);
+                if (l == null) {
+                    continue;
+                }
+                if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
+                    // Found best last known location: %s", l);
+                    bestLocation = l;
+                }
+            }
+
+//            location = locationManager.getLastKnownLocation(lmProvider);
+            location = bestLocation;
         }
         catch (SecurityException e)
         {
@@ -167,23 +184,24 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
      * installed Google Play services and returned to the app.
      */
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(GoogleMap googleMap)
+    {
         mMap = googleMap;
+
+        mMap.setInfoWindowAdapter(new SightInfoAdapter(this.getContext()));
 
         // Add a marker in Sydney and move the camera
         LatLng seoul = new LatLng(37.56, 126.97);
         mMap.moveCamera( CameraUpdateFactory.newLatLng(seoul));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(seoul, 12));
 
-        mMap.addMarker( new MarkerOptions().position(seoul).title( "Marker in Seoul" ) );
-        mMap.addMarker(new MarkerOptions().position(new LatLng(37.555873, 127.049488)).title("Hanyang Univ. IT/BT"));
 
         if( sightList != null)
         {
             for (int i = 0; i < sightList.size(); i++)
             {
                 SightDTO dto = sightList.get(i);
-                mMap.addMarker(new MarkerOptions().position(new LatLng(dto.getLatitude(), dto.getLongitude())).title(dto.getName()));
+                mMap.addMarker(new MarkerOptions().position(new LatLng(dto.getLatitude(), dto.getLongitude())).title(dto.getName()).snippet(dto.getInfo()));
             }
         }
     }
