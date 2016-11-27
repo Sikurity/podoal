@@ -352,7 +352,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
                 }
                 break;
             default:
-                Toast.makeText(this, "Default", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this, "Default", Toast.LENGTH_SHORT).show();
                 break;
         }
     }
