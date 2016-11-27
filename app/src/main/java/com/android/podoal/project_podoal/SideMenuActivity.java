@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
@@ -27,7 +28,7 @@ import android.widget.Toast;
 import com.android.podoal.project_podoal.datamodel.MemberInfo;
 import com.android.podoal.project_podoal.datamodel.SightDTO;
 import com.android.podoal.project_podoal.datamodel.VisitedSightDTO;
-import com.android.podoal.project_podoal.dataquery.FileUploader;
+import com.android.podoal.project_podoal.dataquery.FileUploadRunnable;
 import com.android.podoal.project_podoal.dataquery.InsertQueryGetter;
 import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
 
@@ -222,7 +223,8 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
 
         Circle c = new Circle();
 
-        for (int i = 0; i < sightList.size(); i++) {
+        for (int i = 0; i < sightList.size(); i++)
+        {
             SightDTO sight = sightList.get(i);
 
             c.x = sight.getLatitude();
@@ -231,7 +233,10 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
 
             if ((((  (latitude - c.x) * (latitude - c.x)) + ((longitude - c.y) * (longitude - c.y))) < (c.r * c.r)) && !sight.isVisitedSight(visitedSightList))
             {
-                return sight;
+                if(  !sight.isVisitedSight(visitedSightList) )
+                    return sight;
+                else
+                    return null;
             }
         }
 
@@ -274,15 +279,12 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
                             String postData = visitedSightDTO.makePostData();
                             System.out.println("postData : " + postData);
 
-                            FileUploader fileUploader = new FileUploader();
+                            Cursor cursor = getContentResolver().query(data.getData(), null, null, null, null );
+                            cursor.moveToNext();
+                            String filepath = cursor.getString( cursor.getColumnIndex( "_data" ) );
+                            cursor.close();
 
-                            Boolean bUploadSuccess = fileUploader.execute(data.getData().toString(),maxVisitedId).get();
-
-                            if (!bUploadSuccess.booleanValue())
-                            {
-                                Toast.makeText(this, "사진 업로드에 실패 했습니다..", Toast.LENGTH_SHORT).show();
-                                //return;
-                            }
+                            new Thread(new FileUploadRunnable(filepath)).start();
 
                             String result = dbConnector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_insert_visited_sight.php", postData).get();
 
