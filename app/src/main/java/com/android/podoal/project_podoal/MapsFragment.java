@@ -237,11 +237,15 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
 
                 String sight_name = marker.getTitle();
                 String sight_info = marker.getSnippet();
+                double sight_latitude = marker.getPosition().latitude;
+                double sight_longitude = marker.getPosition().longitude;
 
                 Intent intent = new Intent(getActivity(), MapInfoActivity.class);
 
                 intent.putExtra("sight_name",sight_name);
                 intent.putExtra("sight_info",sight_info);
+                intent.putExtra("sight_latitude",sight_latitude);
+                intent.putExtra("sight_longitude",sight_longitude);
 
                 startActivity(intent);
 

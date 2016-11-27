@@ -25,4 +25,14 @@
         android:layout_marginBottom="30px"
         android:layout_marginRight="30px" />
 
+    <TextView
+        android:text="TextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignRight="@+id/camera_button"
+        android:layout_alignEnd="@+id/camera_button"
+        android:layout_marginTop="13dp"
+        android:id="@+id/current_position" />
+
 </RelativeLayout>
