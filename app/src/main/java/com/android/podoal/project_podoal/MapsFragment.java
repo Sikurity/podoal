@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.android.podoal.project_podoal.arrayAdapter.SightInfoAdapter;
+import com.android.podoal.project_podoal.datamodel.MemberInfo;
 import com.android.podoal.project_podoal.datamodel.SightDTO;
 import com.android.podoal.project_podoal.datamodel.VisitedSightDTO;
 import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
@@ -120,7 +121,8 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
 
             dbSelector = new SelectQueryGetter();
 
-            String member_id = "2011003155";
+            //String member_id = "2011003155";
+            String member_id = MemberInfo.getInstance().getId();
 
             result = dbSelector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_get_visited_sight.php?member_id=" + member_id).get();
             System.out.println("VISITED_SIGHT_SETUP_BEGIN - RESULT : " + result);
