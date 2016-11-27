@@ -9,9 +9,7 @@ import com.kakao.auth.Session;
 import com.kakao.util.exception.KakaoException;
 import com.kakao.util.helper.log.Logger;
 
-import android.content.pm.*;
-import java.security.MessageDigest;
-import javaxt.utils.Base64;
+
 /**
  * Created by hp on 2016-01-26.
  */

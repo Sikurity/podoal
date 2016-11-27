@@ -1,5 +1,7 @@
 package com.android.podoal.project_podoal.datamodel;
 
+import java.util.List;
+
 /**
  * Created by tj on 2016-11-17.
  */
@@ -84,5 +86,16 @@ public class SightDTO {
 
     public void setLocal_number_ID(String local_number_ID) {
         this.local_number_ID = local_number_ID;
+    }
+
+    public boolean isVisitedSight(List<VisitedSightDTO> visitedSightList) {
+        for (int i = 0; i < visitedSightList.size(); i++) {
+            VisitedSightDTO visitedSight = visitedSightList.get(i);
+
+            if (this.getSight_id().compareTo(visitedSight.getSight_id()) == 0) {
+                return true;
+            }
+        }
+        return false;
     }
 }

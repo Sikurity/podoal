@@ -1,25 +1,28 @@
 package com.android.podoal.project_podoal;
-
+import android.Manifest;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
-import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.design.widget.NavigationView;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.design.widget.NavigationView;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.provider.MediaStore;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.content.Intent;
+import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
-
-import com.google.android.gms.maps.SupportMapFragment;
 
 import com.android.podoal.project_podoal.datamodel.SightDTO;
 import com.android.podoal.project_podoal.datamodel.VisitedSightDTO;
@@ -27,8 +30,6 @@ import com.android.podoal.project_podoal.dataquery.FileUploader;
 import com.android.podoal.project_podoal.dataquery.InsertQueryGetter;
 import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
 
-import java.net.URI;
-import java.net.URL;
 import java.util.List;
 
 public class SideMenuActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener
@@ -38,6 +39,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
     Class fragmentClass = null;
 
     private List<SightDTO> sightList;
+    private List<VisitedSightDTO> visitedSightList;
     private Location location;
     private SelectQueryGetter dbSelector;
 
@@ -52,6 +54,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         sightList = MapsFragment.getSightList();
+        visitedSightList = MapsFragment.getVisitedSightList();
 
         /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -73,6 +76,61 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
 
         cameraSetup();
         System.out.println("SIDE_MENU_ACTIVITY_ON_CREATE_END");
+
+
+        // yunkyun permission code
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M) {
+
+            Toast.makeText(SideMenuActivity.this, "마쉬멜로우 이상의 버전입니다.", Toast.LENGTH_SHORT).show();
+
+            int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
+
+            // Activity에서 실행하는경우
+            if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+
+                Toast.makeText(SideMenuActivity.this, "권한이 존재하지 않습니다.", Toast.LENGTH_SHORT).show();
+                // 이 권한을 필요한 이유를 설명해야하는가?
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+                    Toast.makeText(SideMenuActivity.this, "권한 설명이 필요합니다.", Toast.LENGTH_SHORT).show();
+
+                    // 다이어로그같은것을 띄워서 사용자에게 해당 권한이 필요한 이유에 대해 설명합니다
+                    // 해당 설명이 끝난뒤 requestPermissions()함수를 호출하여 권한허가를 요청해야 합니다
+                    if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+                        AlertDialog.Builder dialog = new AlertDialog.Builder(SideMenuActivity.this);
+                        dialog.setTitle("권한이 필요합니다.")
+                                .setMessage("이 기능을 사용하기 위해서는 단말기의 \"위치\" 권한이 필요합니다. 계속하시겠습니까?")
+                                .setPositiveButton("네", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1000);
+                                        }
+
+                                    }
+                                })
+                                .setNegativeButton("아니오", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        Toast.makeText(SideMenuActivity.this, "기능을 취소했습니다.", Toast.LENGTH_SHORT).show();
+                                    }
+                                })
+                                .create()
+                                .show();
+
+                    } else {
+                        // CALL_PHONE 권한을 Android OS 에 요청한다.
+                        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1000);
+                    }
+                }
+            }else{
+                Toast.makeText(SideMenuActivity.this, "이미 존재하는 권한입니다.", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+
     }
 
     @Override
@@ -184,7 +242,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
             c.y = sight.getLongitude();
             c.r = sight.getRadius();
 
-            if (((  (longitude - c.x) * (latitude - c.x)) + ((longitude - c.y) * (longitude - c.y))) < (c.r * c.r))
+            if ((((  (longitude - c.x) * (latitude - c.x)) + ((longitude - c.y) * (longitude - c.y))) < (c.r * c.r)) && !sight.isVisitedSight(visitedSightList))
             {
                 return sight;
             }
@@ -243,6 +301,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
 
                             if (result != null) {
                                 Toast.makeText(this, "result isn't null : " + result, Toast.LENGTH_SHORT).show();
+                                visitedSightList.add(visitedSightDTO);
                             } else {
                                 Toast.makeText(this, "result is null", Toast.LENGTH_SHORT).show();
                             }
@@ -254,7 +313,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
                     }
                     else
                     {
-                        Toast.makeText(this, "matchedSight is null", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "근처에 관광지가 없거나 이미 방문한 관광지 입니다.", Toast.LENGTH_SHORT).show();
                     }
                 }
                 break;

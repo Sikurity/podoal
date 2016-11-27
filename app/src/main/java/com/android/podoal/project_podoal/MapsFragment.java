@@ -6,18 +6,20 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.view.View;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.android.podoal.project_podoal.arrayAdapter.SightInfoAdapter;
 import com.android.podoal.project_podoal.datamodel.SightDTO;
+import com.android.podoal.project_podoal.datamodel.VisitedSightDTO;
 import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -37,6 +39,7 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
     private static SelectQueryGetter dbSelector;
     private static Location location;
     private static List<SightDTO> sightList;
+    private static List<VisitedSightDTO> visitedSightList;
 
     private static double longitude;
     private static double latitude;
@@ -65,6 +68,8 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
         return dbSelector;
     }
 
+    public static List<VisitedSightDTO> getVisitedSightList() { return visitedSightList; }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
@@ -76,6 +81,7 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
         // Inflate the layout for this fragment
         dbSelector = new SelectQueryGetter();
         sightList = new ArrayList<>();
+        visitedSightList = new ArrayList<>();
 
         sightSetup();
         gpsSetup();
@@ -106,6 +112,30 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
                     dto.setLocal_number_ID(entity.getString("local_number_ID"));
 
                     sightList.add(new SightDTO(dto));
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            dbSelector = new SelectQueryGetter();
+
+            String member_id = "2011003155";
+
+            result = dbSelector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_get_visited_sight.php?member_id=" + member_id).get();
+            System.out.println("VISITED_SIGHT_SETUP_BEGIN - RESULT : " + result);
+
+            try {
+                JSONObject jsonObject = new JSONObject(result);
+                JSONArray jsonArray = jsonObject.getJSONArray("result");
+
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject entity = jsonArray.getJSONObject(i);
+                    VisitedSightDTO dto = new VisitedSightDTO();
+
+                    dto.setSight_id(entity.getString("sight_id"));
+
+                    visitedSightList.add(new VisitedSightDTO(dto));
                 }
 
             } catch (JSONException e) {
@@ -201,7 +231,11 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
             for (int i = 0; i < sightList.size(); i++)
             {
                 SightDTO dto = sightList.get(i);
-                mMap.addMarker(new MarkerOptions().position(new LatLng(dto.getLatitude(), dto.getLongitude())).title(dto.getName()).snippet(dto.getInfo()));
+                if (dto.isVisitedSight(visitedSightList)) {
+                    mMap.addMarker(new MarkerOptions().position(new LatLng(dto.getLatitude(), dto.getLongitude())).title(dto.getName()).snippet(dto.getInfo()).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+                } else {
+                    mMap.addMarker(new MarkerOptions().position(new LatLng(dto.getLatitude(), dto.getLongitude())).title(dto.getName()).snippet(dto.getInfo()));
+                }
             }
         }
     }
