@@ -24,6 +24,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.android.podoal.project_podoal.datamodel.MemberInfo;
 import com.android.podoal.project_podoal.datamodel.SightDTO;
 import com.android.podoal.project_podoal.datamodel.VisitedSightDTO;
 import com.android.podoal.project_podoal.dataquery.FileUploader;
@@ -267,7 +268,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
                             Toast.makeText(this, maxVisitedId, Toast.LENGTH_SHORT).show();
                             VisitedSightDTO visitedSightDTO = new VisitedSightDTO();
 
-                            visitedSightDTO.setMember_id("2011003155");
+                            visitedSightDTO.setMember_id(MemberInfo.getInstance().getId());
                             visitedSightDTO.setSight_id(matchedSight.getSight_id());
                             visitedSightDTO.setVisited_id(Integer.parseInt(maxVisitedId));
                             String postData = visitedSightDTO.makePostData();

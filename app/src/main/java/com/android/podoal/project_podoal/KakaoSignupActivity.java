@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
+import com.android.podoal.project_podoal.datamodel.MemberInfo;
 import com.kakao.auth.ApiResponseCallback;
 import com.kakao.auth.ErrorCode;
 import com.kakao.network.ErrorResult;
@@ -16,6 +17,11 @@ import com.kakao.usermgmt.callback.MeResponseCallback;
 import com.kakao.usermgmt.response.model.UserProfile;
 
 import com.kakao.util.helper.log.Logger;
+
+import org.json.JSONObject;
+
+import java.net.URL;
+import java.sql.Date;
 
 public class KakaoSignupActivity extends Activity{
     /**
@@ -58,6 +64,20 @@ public class KakaoSignupActivity extends Activity{
             @Override
             public void onSuccess(UserProfile userProfile) {  //성공 시 userProfile 형태로 반환
                 Logger.d("UserProfile : " + userProfile);
+
+                try {
+                    MemberInfo memberInfo = MemberInfo.getInstance();
+
+                    JSONObject jsonObject = new JSONObject(userProfile.toString());
+
+                    memberInfo.setId(Long.toString(userProfile.getId()));
+                    memberInfo.setProfile_image(new URL(jsonObject.getString("profile_image")));
+                    memberInfo.setThumbnail_image(new URL(jsonObject.getString("thumbnail_image")));
+                    memberInfo.setCreated((Date.valueOf(jsonObject.getString("created"))));
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 redirectMainActivity(); // 로그인 성공시 MainActivity로
             }
         });

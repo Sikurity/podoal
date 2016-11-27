@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 
 import com.android.podoal.project_podoal.arrayAdapter.VisitedSightAdapter;
+import com.android.podoal.project_podoal.datamodel.MemberInfo;
 import com.android.podoal.project_podoal.datamodel.VisitedSightDTO;
 import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
 
@@ -36,7 +37,8 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
         dbConnector = new SelectQueryGetter();
 
         //임시 코드
-        String member_id = new String ("2011003155");
+        //String member_id = new String ("2011003155");
+        String member_id = MemberInfo.getInstance().getId();
 
         try {
             String result = dbConnector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_get_visited_sight.php?member_id=" + member_id).get();
