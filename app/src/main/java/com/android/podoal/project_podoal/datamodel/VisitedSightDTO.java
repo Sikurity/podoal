@@ -20,7 +20,19 @@ public class VisitedSightDTO {
     }
 
     public VisitedSightDTO() {
+        this.member_id = "";
+        this.sight_name = "";
+        this.visited_date = new Date();
+        this.visited_id = 0;
+        this.sight_name = "";
+    }
 
+    public VisitedSightDTO(VisitedSightDTO dto) {
+        this.member_id = dto.getMember_id();
+        this.sight_id = dto.getSight_id();
+        this.visited_date = dto.getVisited_date();
+        this.visited_id = dto.getVisited_id();
+        this.sight_name = dto.getSight_name();
     }
 
     private String member_id;
