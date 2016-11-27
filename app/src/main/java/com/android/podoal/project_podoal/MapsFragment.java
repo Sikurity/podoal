@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.android.podoal.project_podoal.arrayAdapter.SightInfoAdapter;
 import com.android.podoal.project_podoal.datamodel.SightDTO;
 import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -170,6 +171,8 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
+        mMap.setInfoWindowAdapter(new SightInfoAdapter());
+
         // Add a marker in Sydney and move the camera
         LatLng seoul = new LatLng(37.56, 126.97);
         mMap.moveCamera( CameraUpdateFactory.newLatLng(seoul));
@@ -183,7 +186,7 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
             for (int i = 0; i < sightList.size(); i++)
             {
                 SightDTO dto = sightList.get(i);
-                mMap.addMarker(new MarkerOptions().position(new LatLng(dto.getLatitude(), dto.getLongitude())).title(dto.getName()));
+                mMap.addMarker(new MarkerOptions().position(new LatLng(dto.getLatitude(), dto.getLongitude())).title(dto.getName()).snippet(dto.getInfo()));
             }
         }
     }
