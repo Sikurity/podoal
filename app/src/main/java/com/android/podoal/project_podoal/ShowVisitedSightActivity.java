@@ -4,9 +4,12 @@ import android.os.AsyncTask;
 import android.support.v4.widget.TextViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import com.android.podoal.project_podoal.arrayAdapter.VisitedSightAdapter;
@@ -81,6 +84,17 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
 
             arrayAdapter = new VisitedSightAdapter(this,R.layout.visited_sight_item,visitedSightList);
             listView.setAdapter(arrayAdapter);
+
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    int visited_id = visitedSightList.get(position).getVisited_id();
+
+                    System.out.println(visited_id);
+
+                    String filePath = "http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/uploads/" + visited_id + ".jpg";
+                }
+            });
 
         } catch (JSONException e) {
             e.printStackTrace();
