@@ -32,5 +32,5 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile group: project.KAKAO_SDK_GROUP, name: 'usermgmt', version: project.KAKAO_SDK_VERSION
     testCompile 'junit:junit:4.12'
-    compile files('C:/Users/YunKyun/AndroidStudioProjects/Podoal/lib/javaxt-core.jar')
+    compile files('C:/Users/Administrator/Documents/AndroidProjects /Podoal/lib/javaxt-core.jar')
 }
