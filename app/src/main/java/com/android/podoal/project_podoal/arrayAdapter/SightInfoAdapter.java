@@ -29,7 +29,7 @@ public class SightInfoAdapter implements GoogleMap.InfoWindowAdapter {
     @Override
     public View getInfoContents(Marker marker) {
         render(marker, mView);
-        return null;
+        return mView;
     }
 
     private void render(Marker marker, View view) {
