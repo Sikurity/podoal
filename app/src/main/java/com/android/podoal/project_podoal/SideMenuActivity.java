@@ -19,6 +19,7 @@ import android.content.Intent;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.SupportMapFragment;
 
 import com.android.podoal.project_podoal.datamodel.SightDTO;
@@ -38,6 +39,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
     Class fragmentClass = null;
 
     private List<SightDTO> sightList;
+    private List<VisitedSightDTO> visitedSightList;
     private Location location;
     private SelectQueryGetter dbSelector;
 
@@ -52,6 +54,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         sightList = MapsFragment.getSightList();
+        visitedSightList = MapsFragment.getVisitedSightList();
 
         /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -184,7 +187,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
             c.y = sight.getLongitude();
             c.r = sight.getRadius();
 
-            if (((  (longitude - c.x) * (latitude - c.x)) + ((longitude - c.y) * (longitude - c.y))) < (c.r * c.r))
+            if ((((  (longitude - c.x) * (latitude - c.x)) + ((longitude - c.y) * (longitude - c.y))) < (c.r * c.r)) && !sight.isVisitedSight(visitedSightList))
             {
                 return sight;
             }
@@ -254,7 +257,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
                     }
                     else
                     {
-                        Toast.makeText(this, "matchedSight is null", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "근처에 관광지가 없거나 이미 방문한 관광지 입니다.", Toast.LENGTH_SHORT).show();
                     }
                 }
                 break;
