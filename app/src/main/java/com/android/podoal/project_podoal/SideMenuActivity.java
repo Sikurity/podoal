@@ -38,6 +38,7 @@ import com.android.podoal.project_podoal.dataquery.FileUploadRunnable;
 import com.android.podoal.project_podoal.dataquery.InsertQueryGetter;
 import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SideMenuActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener
@@ -50,7 +51,6 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
     private List<VisitedSightDTO> visitedSightList;
     private Location location;
     private SelectQueryGetter dbSelector;
-    private boolean flag = false;
 
     static final int REQUEST_CAMERA = 1;
     private TextView currentPosition = null;
@@ -84,56 +84,102 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M) {
+        ArrayList<String> tmp = new ArrayList<>();
+
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M)
+        {
             int locPermissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
-            if (locPermissionCheck != PackageManager.PERMISSION_GRANTED) {
-                getPermission(Manifest.permission.ACCESS_FINE_LOCATION, "위치_By_GPS");
-            }
+            if (locPermissionCheck != PackageManager.PERMISSION_GRANTED)
+                tmp.add(Manifest.permission.ACCESS_FINE_LOCATION);
 
             int locPermissionCheck2 = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
-            if (locPermissionCheck2 != PackageManager.PERMISSION_GRANTED) {
-                getPermission(Manifest.permission.ACCESS_COARSE_LOCATION, "위치_By_Network");
-            }
+            if (locPermissionCheck2 != PackageManager.PERMISSION_GRANTED)
+                tmp.add(Manifest.permission.READ_EXTERNAL_STORAGE);
 
             int filePermissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
-            if (filePermissionCheck != PackageManager.PERMISSION_GRANTED) {
-                getPermission(Manifest.permission.READ_EXTERNAL_STORAGE, "파일접근");
+            if (filePermissionCheck != PackageManager.PERMISSION_GRANTED)
+                tmp.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+        }
+
+        if( !tmp.isEmpty())
+        {
+            String permissions[] = new String[tmp.size()];
+            int i = 0;
+            for(String p : tmp)
+            {
+                permissions[i++] = p;
             }
+
+            requestPermissions(permissions, 255);
         }
 
         cameraSetup();
-
-        System.out.println("SIDE_MENU_ACTIVITY_ON_CREATE_END");
-    }
-
-    @Override
-    protected void onStart()
-    {
-        super.onStart();
 
         currentPosition = (TextView) findViewById(R.id.current_position);
         currentPosition.setText("Current Position");
 
         LocationManager locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 
-        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, // 등록할 위치제공자
                     100, // 통지사이의 최소 시간간격 (miliSecond)
                     1, // 통지사이의 최소 변경거리 (m)
-                    mLocationListener);
+                    locationListener);
+        }
+
+        if( ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED )
+        {
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, // 등록할 위치제공자
                     100, // 통지사이의 최소 시간간격 (miliSecond)
                     1, // 통지사이의 최소 변경거리 (m)
-                    mLocationListener);
-
-            flag = true;
-        }else{
-            Toast.makeText(this, "권한이 없습니다.", Toast.LENGTH_LONG).show();
+                    locationListener);
         }
+
+        System.out.println("SIDE_MENU_ACTIVITY_ON_CREATE_END");
     }
 
-    private final LocationListener mLocationListener = new LocationListener() {
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+    {
+        if (requestCode != 255)
+        {
+            if( grantResults.length > 0 )
+            {
+                LocationManager locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+
+                for( String p : permissions)
+                {
+                    if ( p.compareTo(Manifest.permission.ACCESS_FINE_LOCATION) == 0 )
+                    {
+                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ) {
+                            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, // 등록할 위치제공자
+                                    100, // 통지사이의 최소 시간간격 (miliSecond)
+                                    1, // 통지사이의 최소 변경거리 (m)
+                                    locationListener);
+                        }
+                    }
+                    else if ( p.compareTo(Manifest.permission.ACCESS_COARSE_LOCATION) == 0 )
+                    {
+                        if( ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED )
+                        {
+                            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, // 등록할 위치제공자
+                                    100, // 통지사이의 최소 시간간격 (miliSecond)
+                                    1, // 통지사이의 최소 변경거리 (m)
+                                    locationListener);
+                        }
+                    }
+                }
+            }
+            else
+                System.out.println("All Permission Denied!");
+        }
+        else
+            System.out.println("Permission Granted Error!");
+
+        return;
+    }
+
+    private final LocationListener locationListener = new LocationListener() {
         public void onLocationChanged(Location location) {
             //여기서 위치값이 갱신되면 이벤트가 발생한다.
             //값은 Location 형태로 리턴되며 좌표 출력 방법은 다음과 같다.
@@ -146,12 +192,12 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
             //Network 위치제공자에 의한 위치변화
             //Network 위치는 Gps에 비해 정확도가 많이 떨어진다.
 
-            //if(flag)
-            //{
-                currentPosition.setText("위도 : " + longitude
-                        + "\n경도 : " + latitude
-                        + "\n정확도 : "  + accuracy);
-            //}
+            currentPosition.setText
+                (
+                    "위도 : " + longitude
+                    + "\n경도 : " + latitude
+                    + "\n정확도 : "  + accuracy
+                );
         }
         public void onProviderDisabled(String provider) {
             // Disabled시
@@ -168,38 +214,6 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
             Log.d("test", "onStatusChanged, provider:" + provider + ", status:" + status + " ,Bundle:" + extras);
         }
     };
-
-    private void getPermission(final String permissionName, String permissionNickname){
-
-        // 다이어로그같은것을 띄워서 사용자에게 해당 권한이 필요한 이유에 대해 설명합니다
-        // 해당 설명이 끝난뒤 requestPermissions()함수를 호출하여 권한허가를 요청해야 합니다
-        if (shouldShowRequestPermissionRationale(permissionName)) {
-
-            AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-            dialog.setTitle("권한이 필요합니다.")
-                    .setMessage("이 기능을 사용하기 위해서는 단말기의 \"" + permissionNickname + "\" 권한이 필요합니다. 계속하시겠습니까?")
-                    .setPositiveButton("네", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                requestPermissions(new String[]{permissionName}, 1000);
-                            }
-
-                        }
-                    })
-                    .setNegativeButton("아니오", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Toast.makeText(SideMenuActivity.this, "기능을 취소했습니다.", Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .create()
-                    .show();
-        } else {
-            requestPermissions(new String[]{permissionName}, 1000);
-        }
-    }
 
     @Override
     public void onBackPressed() {
@@ -354,7 +368,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
                             dbSelector = new SelectQueryGetter();
                             InsertQueryGetter dbConnector = new InsertQueryGetter();
                             String maxVisitedId = dbSelector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_get_max_visit_sight_id.php").get();
-                            Toast.makeText(this, maxVisitedId, Toast.LENGTH_SHORT).show();
+                            //Toast.makeText(this, maxVisitedId, Toast.LENGTH_SHORT).show();
                             VisitedSightDTO visitedSightDTO = new VisitedSightDTO();
 
                             visitedSightDTO.setMember_id(MemberInfo.getInstance().getId());
@@ -385,7 +399,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
                                         cursorImages.close(); // 커서 사용이 끝나면 꼭 닫아준다.
                                     }
                                     else
-                                        System.out.println("ㅠㅠ");
+                                        System.out.println("Cannot Access Image File");
                                 }
                                 catch(Exception e)
                                 {
@@ -407,17 +421,20 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
 
                             String result = dbConnector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_insert_visited_sight.php", postData).get();
 
-                            if (result != null) {
-                                Toast.makeText(this, "result isn't null : " + result, Toast.LENGTH_SHORT).show();
+                            if (result != null)
+                            {
+                                System.out.println("result isn't null : " + result);
                                 visitedSightList.add(visitedSightDTO);
                                 MapsFragment.setMarkers(visitedSightList);
-                            } else {
-                                Toast.makeText(this, "result is null", Toast.LENGTH_SHORT).show();
                             }
+                            else
+                                System.out.println("result is null");
 
-                        } catch (Exception e) {
+                        }
+                        catch (Exception e)
+                        {
                             e.printStackTrace();
-                            Toast.makeText(this, "Error!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "오류, 운영자에게 문의하세요", Toast.LENGTH_SHORT).show();
                         }
                     }
                     else

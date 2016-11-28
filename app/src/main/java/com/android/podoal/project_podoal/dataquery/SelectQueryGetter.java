@@ -21,6 +21,7 @@ public class SelectQueryGetter extends AsyncTask<String, Void, String> {
         try {
             URL url = new URL(uri);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setReadTimeout(5000);
             StringBuilder sb = new StringBuilder();
 
             bufferedReader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -34,7 +35,9 @@ public class SelectQueryGetter extends AsyncTask<String, Void, String> {
             conn.disconnect();
             return sb.toString().trim();
 
-        }catch(Exception e){
+        }
+        catch(Exception e)
+        {
             return null;
         }
     }

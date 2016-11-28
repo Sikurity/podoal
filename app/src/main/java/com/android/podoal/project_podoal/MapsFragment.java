@@ -74,8 +74,9 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
     public static List<VisitedSightDTO> getVisitedSightList() { return visitedSightList; }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+    public void onCreate(Bundle savedInstanceState)
     {
+        super.onCreate(savedInstanceState);
         System.out.println("MAPS_FRAGMENT_ON_CREATE_VIEW_BEGIN");
 
         SupportMapFragment mapFragment = (SupportMapFragment) getFragmentManager().findFragmentById(R.id.map);
@@ -86,11 +87,17 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
         sightList = new ArrayList<>();
         visitedSightList = new ArrayList<>();
 
-        sightSetup();
-        gpsSetup();
+        try
+        {
+            sightSetup();
+            gpsSetup();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
 
         System.out.println("MAPS_FRAGMENT_ON_CREATE_VIEW_END");
-        return super.onCreateView(inflater, container, savedInstanceState);
     }
 
     private void sightSetup() {
