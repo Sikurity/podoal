@@ -84,7 +84,9 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
         }
         catch(Exception e)
         {
-            System.exit(0);
+            getActivity().moveTaskToBack(true);
+            getActivity().finish();
+            android.os.Process.killProcess(android.os.Process.myPid());
         }
 
         System.out.println("MAPS_FRAGMENT_ON_ACTIVITY_CREATED_END");

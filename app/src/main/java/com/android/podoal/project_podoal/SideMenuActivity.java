@@ -462,7 +462,6 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
                     {
                         System.out.println("ACTION_MANAGE_OVERLAY_PERMISSION NOT GRANTED");
                     }
-                    System.exit(0);
                 }
                 break;
             default:
