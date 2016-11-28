@@ -50,13 +50,14 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
         //String member_id = new String ("2011003155");
         String member_id = MemberInfo.getInstance().getId();
 
-        try {
+        try
+        {
             String result = dbConnector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_get_visited_sight.php?member_id=" + member_id).get();
             SetTxtListByResult(result);
-        } catch (Exception e){
+        }
+        catch (Exception e)
+        {
             e.printStackTrace();
-        } finally {
-
         }
     }
 

@@ -3,6 +3,9 @@ package com.android.podoal.project_podoal;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -15,6 +18,9 @@ import com.kakao.util.helper.log.Logger;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.MessageDigest;
+
+import javaxt.utils.Base64;
 
 
 /**
@@ -29,7 +35,7 @@ public class LoginActivity  extends Activity {
         super.onCreate(savedInstanceState);
 
         // Add code to print out the key hash
-        /*try {
+        try {
             PackageInfo info = getPackageManager().getPackageInfo(
                     getPackageName(), PackageManager.GET_SIGNATURES);
             for (Signature signature : info.signatures) {
@@ -39,7 +45,7 @@ public class LoginActivity  extends Activity {
             }
         } catch (Exception e) {
             System.out.println("!!");
-        }*/
+        }
 
         if( NetworkUtil.getConnectivityStatus(this) == NetworkUtil.TYPE_NOT_CONNECTED )
         {
