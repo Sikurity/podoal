@@ -3,10 +3,6 @@ package com.android.podoal.project_podoal.datamodel;
 import java.net.URLEncoder;
 import java.util.Date;
 
-/**
- * Created by tj on 2016-11-12.
- */
-
 public class VisitedSightDTO {
 
     public VisitedSightDTO(String member_id, String sight_id, Date visited_date, int visited_id, String sight_name) {
@@ -80,14 +76,18 @@ public class VisitedSightDTO {
         this.sight_name = sight_name;
     }
 
-    public String makePostData() {
+    public String makePostData()
+    {
         String postData = new String();
 
-        try {
+        try
+        {
             postData += URLEncoder.encode("member_id", "UTF-8") + "=" + URLEncoder.encode(this.member_id, "UTF-8");
             postData += "&" + URLEncoder.encode("sight_id", "UTF-8") + "=" + URLEncoder.encode(this.getSight_id(), "UTF-8");
             postData += "&" + URLEncoder.encode("visited_id", "UTF-8") + "=" + URLEncoder.encode(Integer.toString(this.getVisited_id()), "UTF-8");
-        } catch (Exception e){
+        }
+        catch (Exception e)
+        {
             e.printStackTrace();
             return null;
         }

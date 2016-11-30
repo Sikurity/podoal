@@ -1,27 +1,15 @@
 package com.android.podoal.project_podoal;
 
-import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.android.podoal.project_podoal.arrayAdapter.SightInfoAdapter;
 import com.android.podoal.project_podoal.datamodel.MemberInfo;
 import com.android.podoal.project_podoal.datamodel.SightDTO;
 import com.android.podoal.project_podoal.datamodel.VisitedSightDTO;
-import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
+import com.android.podoal.project_podoal.dataquery.SelectQueryRunnable;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -32,39 +20,34 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.List;
 
-public class MapsFragment extends SupportMapFragment implements OnMapReadyCallback, LocationListener{
+public class MapsFragment extends SupportMapFragment implements OnMapReadyCallback
+{
 
     private static GoogleMap mMap;
-    private LocationManager locationManager;
-    private String lmProvider;
 
-    private static Location location;
-    private static double longitude;
-    private static double latitude;
-
-    private static ArrayList<SightDTO> sightList;
-    private static ArrayList<VisitedSightDTO> visitedSightList;
-
-    public static Location getLocation() { return location; }
-
-    public static double getLongitude() { return longitude; }
-
-    public static double getLatitude() { return latitude; }
+    private static ArrayList<SightDTO> sightList = null;
+    private static ArrayList<VisitedSightDTO> visitedSightList = null;
 
     public static ArrayList<SightDTO>  getSightList() { return sightList; }
-
-    public static ArrayList<VisitedSightDTO>  getVisitedSightList() { return visitedSightList; }
-
-    public MapsFragment() {
-        // Required empty public constructor
+    public static void setSightList(ArrayList<SightDTO> sightList)
+    {
+        MapsFragment.sightList = sightList;
     }
 
+    public static ArrayList<VisitedSightDTO> getVisitedSightList() { return visitedSightList; }
+    public static void  setVisitedSightList(ArrayList<VisitedSightDTO> visitedSightList)
+    {
+        MapsFragment.visitedSightList = visitedSightList;
+    }
+
+    public MapsFragment()
+    {
+        // Required empty public constructor
+    }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState)
@@ -77,13 +60,11 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
 
         try
         {
-            sightList = new ArrayList<SightDTO>();
-            visitedSightList = new ArrayList<VisitedSightDTO>();
-
-            sightSetup(sightList, visitedSightList);
+            sightSetup();
         }
         catch(Exception e)
         {
+            e.printStackTrace();
             getActivity().moveTaskToBack(true);
             getActivity().finish();
             android.os.Process.killProcess(android.os.Process.myPid());
@@ -92,121 +73,93 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
         System.out.println("MAPS_FRAGMENT_ON_ACTIVITY_CREATED_END");
     }
 
-    private void sightSetup(ArrayList<SightDTO> sightList, ArrayList<VisitedSightDTO> visitedSightList)
+    private void sightSetup() throws Exception
     {
-        String result = "";
         try
         {
             System.out.println("SIGHT_SETUP_BEGIN");
 
-            SelectQueryGetter dbSelector = new SelectQueryGetter();
-            result = dbSelector.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, "http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_get_sight_list.php").get();
-            System.out.println("SIGHT_RESULT : " + result);
+            new Thread(new SelectQueryRunnable("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_get_sight_list.php")
+            {
+                @Override
+                public void postRun(Object... params)
+                {
+                    String result = (String)params[0];
+                    System.out.println("SIGHT_RESULT : " + result);
 
-            JSONObject jsonObject = new JSONObject(result);
-            JSONArray jsonArray = jsonObject.getJSONArray("result");
+                    try
+                    {
+                        JSONObject jsonObject = new JSONObject(result);
+                        JSONArray jsonArray = jsonObject.getJSONArray("result");
 
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject entity = jsonArray.getJSONObject(i);
-                SightDTO dto = new SightDTO();
+                        MapsFragment.setSightList(new ArrayList<SightDTO>());
+                        for (int i = 0; i < jsonArray.length(); i++)
+                        {
+                            JSONObject entity = jsonArray.getJSONObject(i);
+                            SightDTO dto = new SightDTO();
 
-                dto.setSight_id(entity.getString("sight_id"));
-                dto.setLatitude(entity.getDouble("latitude"));
-                dto.setLongitude(entity.getDouble("longitude"));
-                dto.setRadius(entity.getDouble("radius"));
-                dto.setName(entity.getString("name"));
-                dto.setInfo(entity.getString("info"));
-                dto.setLocal_number_ID(entity.getString("local_number_ID"));
+                            dto.setSight_id(entity.getString("sight_id"));
+                            dto.setLatitude(entity.getDouble("latitude"));
+                            dto.setLongitude(entity.getDouble("longitude"));
+                            dto.setRadius(entity.getDouble("radius"));
+                            dto.setName(entity.getString("name"));
+                            dto.setInfo(entity.getString("info"));
+                            dto.setLocal_number_ID(entity.getString("local_number_ID"));
+                            MapsFragment.getSightList().add(new SightDTO(dto));
+                        }
 
-                sightList.add(new SightDTO(dto));
-            }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
+                        new Thread(new SelectQueryRunnable("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_get_visited_sight.php?member_id=" + MemberInfo.getInstance().getId())
+                        {
+                            @Override
+                            public void postRun(Object... params)
+                            {
+                                String result = (String)params[0];
+                                System.out.println("VISITED_SIGHT_RESULT : " + result);
 
-        try
-        {
-            System.out.println("VISITED_SIGHT_SETUP_BEGIN");
-            //String member_id = "2011003155";
-            String member_id = MemberInfo.getInstance().getId();
+                                try
+                                {
+                                    JSONObject jsonObject = new JSONObject(result);
+                                    JSONArray jsonArray = jsonObject.getJSONArray("result");
 
-            SelectQueryGetter dbSelector = new SelectQueryGetter();
-            result = dbSelector.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, "http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_get_visited_sight.php?member_id=" + member_id).get();
-            System.out.println("VISITED_SIGHT_RESULT : " + result);
+                                    MapsFragment.setVisitedSightList(new ArrayList<VisitedSightDTO>());
+                                    for (int i = 0; i < jsonArray.length(); i++) {
+                                        JSONObject entity = jsonArray.getJSONObject(i);
+                                        VisitedSightDTO dto = new VisitedSightDTO();
 
-            JSONObject jsonObject = new JSONObject(result);
-            JSONArray jsonArray = jsonObject.getJSONArray("result");
+                                        dto.setSight_id(entity.getString("sight_id"));
 
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject entity = jsonArray.getJSONObject(i);
-                VisitedSightDTO dto = new VisitedSightDTO();
+                                        MapsFragment.getVisitedSightList().add(new VisitedSightDTO(dto));
+                                    }
 
-                dto.setSight_id(entity.getString("sight_id"));
+                                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            MapsFragment.setMarkers();
+                                            System.out.println("SET_MARKETS_POST_MAIN_THREAD");
+                                        }
+                                    });
+                                }
 
-                visitedSightList.add(new VisitedSightDTO(dto));
-            }
+                                catch (Exception e)
+                                {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }).start();
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+
             System.out.println("SIGHT_SETUP_END");
         }
         catch (Exception e)
         {
             e.printStackTrace();
-        }
-    }
-
-    private void gpsSetup()
-    {
-        System.out.println("GPS_SETUP_BEGIN");
-
-        try
-        {
-            locationManager = SideMenuActivity.getLocationManager();
-            Criteria criteria = new Criteria();
-            lmProvider = locationManager.getBestProvider(criteria, true);
-
-            if (lmProvider == null || locationManager.isProviderEnabled(lmProvider)) {
-                List<String> providerList = locationManager.getAllProviders();
-
-                for (int i = 0; i < providerList.size(); i++) {
-                    String providerName = providerList.get(i);
-
-                    if (locationManager.isProviderEnabled(providerName)) {
-                        lmProvider = providerName;
-                        break;
-                    }
-                }
-            }
-
-            // location = locationManager.getLastKnownLocation(lmProvider);
-            List<String> providers = locationManager.getProviders(true);
-            Location bestLocation = null;
-            for (String provider : providers) {
-
-                Location loc = locationManager.getLastKnownLocation(provider);
-                if (loc == null) {
-                    continue;
-                }
-                if (bestLocation == null || loc.getAccuracy() < bestLocation.getAccuracy()) {
-                    // Found best last known location: %s", l);
-                    bestLocation = loc;
-                }
-            }
-
-            location = bestLocation;
-        }
-        catch (SecurityException e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            if (location == null)
-                Toast.makeText(getActivity(),"현재 위치를 찾을 수 없습니다.",Toast.LENGTH_SHORT).show();
-            else
-                onLocationChanged(location);
-
-            System.out.println("GPS_SETUP_END");
+            throw e;
         }
     }
 
@@ -235,9 +188,6 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
             mMap.moveCamera( CameraUpdateFactory.newLatLng(seoul));
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(seoul, 12));
 
-            gpsSetup();
-            setMarkers(sightList, visitedSightList);
-
             mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
 
                 public boolean onMarkerClick(Marker marker) {
@@ -249,16 +199,22 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
 
                     Intent intent = new Intent(getActivity(), MapInfoActivity.class);
 
-                    intent.putExtra("sight_name",sight_name);
-                    intent.putExtra("sight_info",sight_info);
-                    intent.putExtra("sight_latitude",sight_latitude);
-                    intent.putExtra("sight_longitude",sight_longitude);
+                    intent.putExtra("sight_name", sight_name);
+                    intent.putExtra("sight_info", sight_info);
+                    intent.putExtra("sight_latitude", sight_latitude);
+                    intent.putExtra("sight_longitude", sight_longitude);
 
                     startActivity(intent);
 
                     return true;
                 }
             });
+
+            if( sightList != null && visitedSightList != null )
+            {
+                setMarkers();
+                System.out.println("SET_MARKETS_POST_ONMAPREADY");
+            }
         }
         catch(Exception e)
         {
@@ -268,30 +224,7 @@ public class MapsFragment extends SupportMapFragment implements OnMapReadyCallba
         System.out.println("ON_MAP_READY_END");
     }
 
-    @Override
-    public void onLocationChanged(Location location)
-    {
-        latitude = location.getLatitude();
-        longitude = location.getLongitude();
-    }
-
-    @Override
-    public void onProviderDisabled(String provider)
-    {
-        // TODO Auto-generated method stub
-    }
-    @Override
-    public void onProviderEnabled(String provider)
-    {
-        // TODO Auto-generated method stub
-    }
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras)
-    {
-        // TODO Auto-generated method stub
-    }
-
-    public static void setMarkers(List<SightDTO> sightList, List<VisitedSightDTO> visitedSightList)
+    public static void setMarkers()
     {
         mMap.clear();
 

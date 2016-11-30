@@ -9,26 +9,39 @@ import com.android.podoal.project_podoal.GlobalApplication;
 import java.io.InputStream;
 import java.net.URL;
 
-/**
- * Created by tj on 2016-11-28.
- */
-
 public class FileDownloader extends AsyncTask<String,Void,Bitmap> {
 
     @Override
     protected Bitmap doInBackground(String... strings) {
         Bitmap bitmap = null;
-        InputStream inputStream = null;
+        InputStream is = null;
 
-        try {
-            String filePath = "http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/uploads/" + strings[0] + ".jpg";;
+        try
+        {
+            String filePath = "http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/uploads/" + strings[0] + ".jpg";
             URL url = new URL(filePath);
-            inputStream = url.openStream();
-            bitmap = BitmapFactory.decodeStream(inputStream);
-            inputStream.close();
-        } catch (Exception e) {
+            is = url.openStream();
+            bitmap = BitmapFactory.decodeStream(is);
+        }
+        catch (Exception e)
+        {
             e.printStackTrace();
-        } finally {
+        }
+        finally
+        {
+            try
+            {
+                if (is != null)
+                    is.close();
+            }
+            catch(Exception ex)
+            {
+                ex.printStackTrace();
+            }
+            finally
+            {
+                is = null;
+            }
         }
 
         return bitmap;

@@ -1,24 +1,22 @@
 package com.android.podoal.project_podoal;
 
 import android.Manifest;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
-import android.provider.Settings;
-import android.support.annotation.Nullable;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -37,23 +35,19 @@ import com.android.podoal.project_podoal.datamodel.MemberInfo;
 import com.android.podoal.project_podoal.datamodel.SightDTO;
 import com.android.podoal.project_podoal.datamodel.VisitedSightDTO;
 import com.android.podoal.project_podoal.dataquery.FileUploadRunnable;
-import com.android.podoal.project_podoal.dataquery.InsertQueryGetter;
-import com.android.podoal.project_podoal.dataquery.SelectQueryGetter;
+import com.android.podoal.project_podoal.dataquery.SelectQueryRunnable;
+import com.android.podoal.project_podoal.dataquery.UpdateQueryRunnable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
-public class SideMenuActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener
+public class SideMenuActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, LocationListener
 {
-    FragmentManager fragmentManager;
-    Fragment fragment = null;
-    Class fragmentClass = null;
-
-    private List<SightDTO> sightList;
-    private List<VisitedSightDTO> visitedSightList;
-    private LocationListener locationListener;
     private Location location;
-    private SelectQueryGetter dbSelector;
+    private double longitude;
+    private double latitude;
+    private float accuracy;
 
     private static LocationManager locationManager;
     public static LocationManager getLocationManager()
@@ -71,17 +65,6 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
         setContentView(R.layout.activity_side_menu);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        sightList = MapsFragment.getSightList();
-        visitedSightList = MapsFragment.getVisitedSightList();
-
-        /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });*/
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -96,49 +79,38 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
 
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M)
         {
-            boolean canDrawOverlays = Settings.canDrawOverlays(this);
-            if (!canDrawOverlays) {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivityForResult(intent, 255);
-            }
-            else
+            ArrayList<String> tmp = new ArrayList<>();
+
+            int locByGpsPermissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
+            if (locByGpsPermissionCheck != PackageManager.PERMISSION_GRANTED)
+                tmp.add(Manifest.permission.ACCESS_FINE_LOCATION);
+
+            int locByNetworkPermissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
+            if (locByNetworkPermissionCheck != PackageManager.PERMISSION_GRANTED)
+                tmp.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+
+            int filePermissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+            if (filePermissionCheck != PackageManager.PERMISSION_GRANTED)
+                tmp.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+
+            if( !tmp.isEmpty())
             {
-                System.out.println("ACTION_MANAGE_OVERLAY_PERMISSION GRANTED");
-
-                ArrayList<String> tmp = new ArrayList<>();
-
-                int locByGpsPermissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
-                if (locByGpsPermissionCheck != PackageManager.PERMISSION_GRANTED)
-                    tmp.add(Manifest.permission.ACCESS_FINE_LOCATION);
-
-                int locByNetworkPermissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
-                if (locByNetworkPermissionCheck != PackageManager.PERMISSION_GRANTED)
-                    tmp.add(Manifest.permission.ACCESS_COARSE_LOCATION);
-
-                int filePermissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
-                if (filePermissionCheck != PackageManager.PERMISSION_GRANTED)
-                    tmp.add(Manifest.permission.READ_EXTERNAL_STORAGE);
-
-                if( !tmp.isEmpty())
+                String permissions[] = new String[tmp.size()];
+                int i = 0;
+                for(String p : tmp)
                 {
-                    String permissions[] = new String[tmp.size()];
-                    int i = 0;
-                    for(String p : tmp)
-                    {
-                        permissions[i++] = p;
-                    }
-
-                    requestPermissions(permissions, 255);
+                    permissions[i++] = p;
                 }
+
+                requestPermissions(permissions, 255);
             }
         }
 
+        gpsSetup();
         cameraSetup();
 
         TextView currentPosition = (TextView) findViewById(R.id.current_position);
         currentPosition.setText("Current Position");
-        locationListener = new TextViewLocationListener(currentPosition);
 
         System.out.println("SIDE_MENU_ACTIVITY_ON_CREATE_END");
     }
@@ -153,7 +125,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, // GPS를 통해 위치파악
                     1000, // 통지사이의 최소 시간간격 (miliSecond)
                     10, // 통지사이의 최소 변경거리 (m)
-                    locationListener);
+                    this);
             System.out.println("LocationListener By GPS Attached1");
         }
 
@@ -162,7 +134,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, // 네트워크를 통해 위치파악, 미개통 스마트폰 사용 불가
                     15000, // 통지사이의 최소 시간간격 (miliSecond)
                     150, // 통지사이의 최소 변경거리 (m)
-                    locationListener);
+                    this);
             System.out.println("LocationListener By Network Attached1");
         }
 
@@ -170,7 +142,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
     {
         if (requestCode == 255)
         {
@@ -186,7 +158,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
                             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, // GPS를 통해 위치파악
                                     1000, // 통지사이의 최소 시간간격 (miliSecond)
                                     10, // 통지사이의 최소 변경거리 (m)
-                                    locationListener);
+                                    this);
                         }
                         System.out.println("LocationListener By GPS Attached2");
                     }
@@ -197,7 +169,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
                             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, // 네트워크를 통해 위치파악, 미개통 스마트폰 사용 불가
                                     15000, // 통지사이의 최소 시간간격 (miliSecond)
                                     150, // 통지사이의 최소 변경거리 (m)
-                                    locationListener);
+                                    this);
                             System.out.println("LocationListener By Network Attached2");
                         }
                     }
@@ -208,8 +180,6 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
         }
         else
             System.out.println("Permission Granted Error! - " + requestCode);
-
-        return;
     }
 
     @Override
@@ -244,27 +214,12 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onStop(){
-        super.onStop();
-        if(locationManager !=null)
-        {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
-            {
-                locationManager.removeUpdates(locationListener);
-            }
-        }
-    }
-
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        boolean bFragmentChange = false;
+    public boolean onNavigationItemSelected(@NonNull MenuItem item)
+    {
+        //boolean bFragmentChange = false;
+        int id = item.getItemId(); // Handle navigation view item clicks here.
 
         if (id == R.id.nav_list)
         {
@@ -316,6 +271,66 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
         System.out.println("CAMERA_SETUP_END");
     }
 
+    private void gpsSetup()
+    {
+        System.out.println("GPS_SETUP_BEGIN");
+
+        try
+        {
+            locationManager = SideMenuActivity.getLocationManager();
+            Criteria criteria = new Criteria();
+            String lmProvider= locationManager.getBestProvider(criteria, true);
+
+            if (lmProvider == null || locationManager.isProviderEnabled(lmProvider))
+            {
+                List<String> providerList = locationManager.getAllProviders();
+
+                for (int i = 0; i < providerList.size(); i++)
+                {
+                    String providerName = providerList.get(i);
+
+                    if (locationManager.isProviderEnabled(providerName))
+                    {
+                        lmProvider = providerName;
+                        break;
+                    }
+                }
+            }
+
+            // location = locationManager.getLastKnownLocation(lmProvider);
+            List<String> providers = locationManager.getProviders(true);
+            Location bestLocation = null;
+            for (String provider : providers)
+            {
+                Location loc = locationManager.getLastKnownLocation(provider);
+                if (loc == null)
+                {
+                    continue;
+                }
+                if (bestLocation == null || loc.getAccuracy() < bestLocation.getAccuracy())
+                {
+                    // Found best last known location: %s", l);
+                    bestLocation = loc;
+                }
+            }
+
+            location = bestLocation;
+        }
+        catch (SecurityException e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            if (location == null)
+                Toast.makeText(this,"현재 위치를 찾을 수 없습니다.",Toast.LENGTH_SHORT).show();
+            else
+                onLocationChanged(location);
+
+            System.out.println("GPS_SETUP_END");
+        }
+    }
+
     private class Circle {
         public double x;
         public double y;
@@ -324,8 +339,8 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
 
     private SightDTO ValidateSight()
     {
-        double latitude = MapsFragment.getLatitude();
-        double longitude = MapsFragment.getLongitude();
+        List<SightDTO> sightList = MapsFragment.getSightList();
+        List<VisitedSightDTO> visitedSightList = MapsFragment.getVisitedSightList();
 
         Circle c = new Circle();
 
@@ -352,96 +367,149 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data)
     {
-        location = MapsFragment.getLocation();
-
         switch (requestCode)
         {
             case REQUEST_CAMERA:
-                if (resultCode != this.RESULT_OK || data == null)
+                if (resultCode != RESULT_OK || data == null)
                 {
                     Toast.makeText(this, "카메라에서 사진 정보를 가져올 수 없습니다.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
+                gpsSetup();
                 if (location == null)
                 {
-                    Toast.makeText(this, "현재 위치를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
+                    System.out.println("LOCATION IS NULL");
                     return;
                 }
                 else
                 {
-                    SightDTO matchedSight = ValidateSight();
+                    final Intent imageData = data;
+                    final SightDTO matchedSight = ValidateSight();
 
-                    if (matchedSight != null)
+                    if( MapsFragment.getSightList() == null || MapsFragment.getVisitedSightList() == null )
+                        Toast.makeText(this, "관광지 정보를 불러오는 중입니다...", Toast.LENGTH_SHORT).show();
+                    else if ( matchedSight != null )
                     {
                         try
                         {
-                            SelectQueryGetter dbSelector = new SelectQueryGetter();
-                            String maxVisitedId = dbSelector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_get_max_visit_sight_id.php").get();
-                            //Toast.makeText(this, maxVisitedId, Toast.LENGTH_SHORT).show();
-                            VisitedSightDTO visitedSightDTO = new VisitedSightDTO();
-
-                            visitedSightDTO.setMember_id(MemberInfo.getInstance().getId());
-                            visitedSightDTO.setSight_id(matchedSight.getSight_id());
-                            visitedSightDTO.setVisited_id(Integer.parseInt(maxVisitedId));
-
-                            String postData = visitedSightDTO.makePostData();
-                            System.out.println("postData : " + postData);
-
-                            Uri uri = null;
-                            if( data.getData() == null ) // 될지 안될지 모름
-                            {
-                                String[] IMAGE_PROJECTION =
+                            new Thread
+                            (
+                                new SelectQueryRunnable
+                                (
+                                    "http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_get_max_visit_sight_id.php"
+                                )
                                 {
-                                    MediaStore.Images.ImageColumns.DATA,
-                                    MediaStore.Images.ImageColumns._ID,
-                                };
-
-                                try
-                                {
-                                    Cursor cursorImages = getContentResolver().query(
-                                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                                            IMAGE_PROJECTION, null, null,null);
-                                    if (cursorImages != null && cursorImages.moveToLast())
+                                    @Override
+                                    public void postRun(Object ...params)
                                     {
-                                        uri = Uri.parse(cursorImages.getString(0)); //경로
-                                        System.out.println("uri1 : " + uri.toString());
-                                        //int id = cursorImages.getInt(1); //아이디
-                                        cursorImages.close(); // 커서 사용이 끝나면 꼭 닫아준다.
+                                        final String maxVisitedId = (String)params[0];
+                                        System.out.println("##" + maxVisitedId);
+                                        //Toast.makeText(this, maxVisitedId, Toast.LENGTH_SHORT).show();
+                                        final VisitedSightDTO visitedSightDTO = new VisitedSightDTO();
+
+                                        visitedSightDTO.setMember_id(MemberInfo.getInstance().getId());
+                                        visitedSightDTO.setSight_id(matchedSight.getSight_id());
+                                        visitedSightDTO.setVisited_id(Integer.parseInt(maxVisitedId));
+
+                                        String postData = visitedSightDTO.makePostData();
+                                        System.out.println("postData : " + postData);
+
+                                        new Thread
+                                        (
+                                            new UpdateQueryRunnable
+                                                (
+                                                    "http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_insert_visited_sight.php",
+                                                    postData
+                                                )
+                                                {
+                                                @Override
+                                                public void postRun(Object ...params)
+                                                {
+                                                    Uri uri = null;
+                                                    String filepath = "default.jpg";
+                                                    if( imageData.getData() == null ) // 될지 안될지 모름
+                                                    {
+                                                        String[] IMAGE_PROJECTION =
+                                                            {
+                                                                MediaStore.Images.ImageColumns.DATA,
+                                                                MediaStore.Images.ImageColumns._ID,
+                                                            };
+
+                                                        try
+                                                        {
+                                                            Cursor cursorImages = getContentResolver().query
+                                                            (
+                                                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                                                                IMAGE_PROJECTION,
+                                                                null,
+                                                                null,
+                                                                null
+                                                            );
+
+                                                            if (cursorImages != null && cursorImages.moveToLast())
+                                                            {
+                                                                uri = Uri.parse(cursorImages.getString(0)); //경로
+                                                                System.out.println("uri1 : " + uri.toString());
+                                                                //int id = cursorImages.getInt(1); //아이디
+                                                                cursorImages.close(); // 커서 사용이 끝나면 꼭 닫아준다.
+                                                            }
+                                                            else
+                                                                System.out.println("Cannot Access Image File");
+                                                        }
+                                                        catch(Exception e)
+                                                        {
+                                                            e.printStackTrace();
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        uri = imageData.getData();
+                                                        System.out.println("uri2 : " + uri.toString());
+                                                    }
+
+                                                    if( uri != null )
+                                                    {
+                                                        Cursor cursor = getContentResolver().query(uri, null, null, null, null );
+                                                        if( cursor != null)
+                                                        {
+                                                            cursor.moveToNext();
+                                                            filepath = cursor.getString(cursor.getColumnIndex("_data"));
+                                                            cursor.close();
+                                                        }
+                                                    }
+
+                                                    new Thread
+                                                    (
+                                                        new FileUploadRunnable
+                                                        (
+                                                            "http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/upload.php",
+                                                            filepath,
+                                                            maxVisitedId
+                                                        )
+                                                        {
+                                                            @Override
+                                                            public void postRun(Object ...params)
+                                                            {
+                                                                new Handler(Looper.getMainLooper()).post(new Runnable()
+                                                                {
+                                                                    @Override
+                                                                    public void run()
+                                                                    {
+                                                                        MapsFragment.getVisitedSightList().add(visitedSightDTO);
+                                                                        MapsFragment.setMarkers();
+                                                                        System.out.println("SET_MARKETS_REQUEST_CAMERA_RESULT_OK");
+                                                                    }
+                                                                });
+                                                            }
+                                                        }
+                                                    ).start();
+                                                }
+                                            }
+                                        ).start();
                                     }
-                                    else
-                                        System.out.println("Cannot Access Image File");
                                 }
-                                catch(Exception e)
-                                {
-                                    e.printStackTrace();
-                                }
-                            }
-                            else
-                            {
-                                uri = data.getData();
-                                System.out.println("uri2 : " + uri.toString());
-                            }
-
-                            Cursor cursor = getContentResolver().query(uri, null, null, null, null );
-                            cursor.moveToNext();
-                            String filepath = cursor.getString( cursor.getColumnIndex( "_data" ) );
-                            cursor.close();
-
-                            new Thread(new FileUploadRunnable(filepath, maxVisitedId)).start();
-
-                            InsertQueryGetter dbConnector = new InsertQueryGetter();
-                            String result = dbConnector.execute("http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_insert_visited_sight.php", postData).get();
-
-                            if (result != null)
-                            {
-                                System.out.println("result isn't null : " + result);
-                                visitedSightList.add(visitedSightDTO);
-                                MapsFragment.setMarkers(sightList, visitedSightList);
-                            }
-                            else
-                                System.out.println("result is null");
-
+                            ).start();
                         }
                         catch (Exception e)
                         {
@@ -450,23 +518,50 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
                         }
                     }
                     else
-                    {
                         Toast.makeText(this, "근처에 관광지가 없거나 이미 방문한 관광지 입니다.", Toast.LENGTH_SHORT).show();
-                    }
-                }
-                break;
-            case 255:
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
-                {
-                    if (!Settings.canDrawOverlays(this))
-                    {
-                        System.out.println("ACTION_MANAGE_OVERLAY_PERMISSION NOT GRANTED");
-                    }
                 }
                 break;
             default:
                 //Toast.makeText(this, "Default", Toast.LENGTH_SHORT).show();
                 break;
         }
+    }
+
+    @Override
+    public void onLocationChanged(Location location)
+    {
+        //여기서 위치값이 갱신되면 이벤트가 발생한다.
+        //값은 Location 형태로 리턴되며 좌표 출력 방법은 다음과 같다.
+
+        Log.d("test", "onLocationChanged, location:" + location);
+        longitude = location.getLongitude(); //경도
+        latitude = location.getLatitude();   //위도
+        accuracy = location.getAccuracy();    //정확도
+        //Gps 위치제공자에 의한 위치변화. 오차범위가 좁다.
+        //Network 위치제공자에 의한 위치변화
+        //Network 위치는 Gps에 setTextView 비해 정확도가 많이 떨어진다.
+
+        ((TextView)findViewById(R.id.current_position)).setText
+        (
+            "위도 : " + longitude
+            + "\n경도 : " + latitude
+            + "\n정확도 : "  + accuracy
+        );
+    }
+
+    @Override
+    public void onProviderDisabled(String provider)
+    {
+        // TODO Auto-generated method stub
+    }
+    @Override
+    public void onProviderEnabled(String provider)
+    {
+        // TODO Auto-generated method stub
+    }
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras)
+    {
+        // TODO Auto-generated method stub
     }
 }
