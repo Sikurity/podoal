@@ -1,12 +1,10 @@
 package com.android.podoal.project_podoal;
 
 import android.graphics.Bitmap;
-import android.graphics.Matrix;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
@@ -34,7 +32,6 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
     private ArrayList<VisitedSightDTO> visitedSightList = new ArrayList<VisitedSightDTO>();
     ListView listView;
     VisitedSightAdapter arrayAdapter;
-    static Bitmap bitmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -132,16 +129,7 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
                         image = new FileDownloader().execute(Integer.toString(visited_id)).get();
                         if(image != null)
                         {
-                            if (image.getHeight() < image.getWidth()) {
-                                Matrix matrix = new Matrix();
-                                matrix.postRotate(90);
-                                rotated = Bitmap.createBitmap(image, 0, 0, image.getWidth(), image.getHeight(), matrix, true);
-                                imageView.setImageBitmap(rotated);
-                            }
-                            else
-                                imageView.setImageBitmap(bitmap);
-
-                        /* 토스트에 뷰 셋팅하기 xml 통째로 넣어도 됨 */
+                            imageView.setImageBitmap(image);
                             toast.setView(imageView);
                         }
                         else

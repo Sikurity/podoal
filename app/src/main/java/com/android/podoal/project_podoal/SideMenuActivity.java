@@ -422,7 +422,7 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
 
                                         Uri uri = null;
                                         String filepath = "tmp.jpg";
-                                        if( imageData.getData() == null ) // 될지 안될지 모름
+                                        if( imageData.getData() == null )
                                         {
                                             filepath = getCacheDir() + filepath;
                                             Bitmap image = (Bitmap) (imageData.getExtras().get("data"));
