@@ -1,6 +1,7 @@
 package com.android.podoal.project_podoal;
 
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
@@ -33,6 +34,7 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
     private ArrayList<VisitedSightDTO> visitedSightList = new ArrayList<VisitedSightDTO>();
     ListView listView;
     VisitedSightAdapter arrayAdapter;
+    static Bitmap bitmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -115,33 +117,55 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
 
             arrayAdapter = new VisitedSightAdapter(this,R.layout.visited_sight_item, visitedSightList);
             listView.setAdapter(arrayAdapter);
-
             listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     int visited_id = visitedSightList.get(position).getVisited_id();
+                    Bitmap image = null, rotated = null;
+
+                    ImageView imageView = new ImageView(getApplicationContext());
+                    Toast toast = new Toast(getApplicationContext());
 
                     System.out.println("ListItem - VISITED_ID : " + visited_id);
-
-                    try {
-
-                        FileDownloader fileDownloader = new FileDownloader();
-
-                        Bitmap bitmap = fileDownloader.execute(Integer.toString(visited_id)).get();
-
-                        if(bitmap != null)
+                    try
+                    {
+                        image = new FileDownloader().execute(Integer.toString(visited_id)).get();
+                        if(image != null)
                         {
-                            ImageView imageView = new ImageView(getApplicationContext());
-
-                            imageView.setImageBitmap(bitmap);
+                            if (image.getHeight() < image.getWidth()) {
+                                Matrix matrix = new Matrix();
+                                matrix.postRotate(90);
+                                rotated = Bitmap.createBitmap(image, 0, 0, image.getWidth(), image.getHeight(), matrix, true);
+                                imageView.setImageBitmap(rotated);
+                            }
+                            else
+                                imageView.setImageBitmap(bitmap);
 
                         /* 토스트에 뷰 셋팅하기 xml 통째로 넣어도 됨 */
-                            Toast toast = new Toast(getApplicationContext());
                             toast.setView(imageView);
-                            toast.show();
                         }
-                    } catch (Exception e) {
+                        else
+                            toast.setText("이미지를 불러올 수 없습니다");
+                            /*txtView.setText
+                            (
+                                "member_id:" + visitedSightList.get(0).getMember_id() +
+                                "\nsight_id:" + visitedSightList.get(0).getSight_id() +
+                                "\nvisited_date:" + visitedSightList.get(0).getVisited_date() +
+                                "\nvisited_id:" + visitedSightList.get(0).getVisited_id()
+                            );*/
+
+                        toast.show();
+                    }
+                    catch (Exception e)
+                    {
                         e.printStackTrace();
+                    }
+                    finally
+                    {
+                        //if( image != null )
+                        //    image.recycle();
+                        //if( rotated != null )
+                        //    rotated.recycle();
                     }
                 }
             });
@@ -150,11 +174,5 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
         {
             e.printStackTrace();
         }
-/*
-        txtView.setText("member_id:" + visitedSightList.get(0).getMember_id() +
-                "\nsight_id:" + visitedSightList.get(0).getSight_id() +
-                "\nvisited_date:" + visitedSightList.get(0).getVisited_date() +
-                "\nvisited_id:" + visitedSightList.get(0).getVisited_id());
-*/
     }
 }

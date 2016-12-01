@@ -2,6 +2,7 @@ package com.android.podoal.project_podoal.dataquery;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.ExifInterface;
 import android.os.AsyncTask;
 
 import com.android.podoal.project_podoal.GlobalApplication;
@@ -9,10 +10,11 @@ import com.android.podoal.project_podoal.GlobalApplication;
 import java.io.InputStream;
 import java.net.URL;
 
-public class FileDownloader extends AsyncTask<String,Void,Bitmap> {
-
+public class FileDownloader extends AsyncTask<String,Void,Bitmap>
+{
     @Override
-    protected Bitmap doInBackground(String... strings) {
+    protected Bitmap doInBackground(String... strings)
+    {
         Bitmap bitmap = null;
         InputStream is = null;
 
@@ -22,10 +24,14 @@ public class FileDownloader extends AsyncTask<String,Void,Bitmap> {
             URL url = new URL(filePath);
             is = url.openStream();
             bitmap = BitmapFactory.decodeStream(is);
+
+            return bitmap;
         }
         catch (Exception e)
         {
             e.printStackTrace();
+
+            return null;
         }
         finally
         {
@@ -43,7 +49,5 @@ public class FileDownloader extends AsyncTask<String,Void,Bitmap> {
                 is = null;
             }
         }
-
-        return bitmap;
     }
 }

@@ -447,6 +447,11 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
                                             {
                                                 e.printStackTrace();
                                             }
+                                            finally
+                                            {
+                                                if(image != null)
+                                                    image.recycle();
+                                            }
                                         }
                                         else
                                         {
