@@ -121,7 +121,7 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     int visited_id = visitedSightList.get(position).getVisited_id();
 
-                    System.out.println(visited_id);
+                    System.out.println("ListItem - VISITED_ID : " + visited_id);
 
                     try {
 
@@ -129,7 +129,8 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
 
                         Bitmap bitmap = fileDownloader.execute(Integer.toString(visited_id)).get();
 
-                        if(bitmap != null) {
+                        if(bitmap != null)
+                        {
                             ImageView imageView = new ImageView(getApplicationContext());
 
                             imageView.setImageBitmap(bitmap);
@@ -137,10 +138,6 @@ public class ShowVisitedSightActivity extends AppCompatActivity {
                         /* 토스트에 뷰 셋팅하기 xml 통째로 넣어도 됨 */
                             Toast toast = new Toast(getApplicationContext());
                             toast.setView(imageView);
-                            //위치 지정
-                            toast.setGravity(Gravity.CENTER,50,50);
-                            //여백 지정
-                            toast.setMargin(1000, 1000);
                             toast.show();
                         }
                     } catch (Exception e) {

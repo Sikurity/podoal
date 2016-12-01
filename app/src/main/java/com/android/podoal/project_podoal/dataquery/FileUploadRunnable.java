@@ -12,6 +12,7 @@ import java.net.URL;
 public abstract class FileUploadRunnable implements Runnable
 {
     private String filepath;
+    private File image;
     private String maxVisitedNum;
     private String URL;
 
@@ -20,6 +21,17 @@ public abstract class FileUploadRunnable implements Runnable
         this.URL = URL;
         this.filepath = filepath;
         this.maxVisitedNum = maxVisitedNum;
+        this.image = null;
+
+        System.out.println(URL + "/" + filepath + "/" +  maxVisitedNum);
+    }
+
+    public FileUploadRunnable(String URL, File image, String maxVisitedNum)
+    {
+        this.URL = URL;
+        this.filepath = null;
+        this.maxVisitedNum = maxVisitedNum;
+        this.image = image;
 
         System.out.println(URL + "/" + filepath + "/" +  maxVisitedNum);
     }

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -23,6 +24,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -38,6 +40,9 @@ import com.android.podoal.project_podoal.dataquery.FileUploadRunnable;
 import com.android.podoal.project_podoal.dataquery.SelectQueryRunnable;
 import com.android.podoal.project_podoal.dataquery.UpdateQueryRunnable;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -412,80 +417,72 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
                                         visitedSightDTO.setSight_id(matchedSight.getSight_id());
                                         visitedSightDTO.setVisited_id(Integer.parseInt(maxVisitedId));
 
-                                        String postData = visitedSightDTO.makePostData();
+                                        final String postData = visitedSightDTO.makePostData();
                                         System.out.println("postData : " + postData);
+
+                                        Uri uri = null;
+                                        String filepath = "tmp.jpg";
+                                        if( imageData.getData() == null ) // 될지 안될지 모름
+                                        {
+                                            filepath = getCacheDir() + filepath;
+                                            Bitmap image = (Bitmap) (imageData.getExtras().get("data"));
+
+                                            DisplayMetrics displayMetrics = new DisplayMetrics();
+                                            getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+
+                                            image = Bitmap.createScaledBitmap(image, (int)(displayMetrics.widthPixels * 0.75), (int)(displayMetrics.heightPixels * 0.75), true);
+
+                                            try
+                                            {
+                                                File imageCacheFile = new File(filepath);
+                                                OutputStream out = null;
+                                                imageCacheFile.createNewFile();
+                                                out = new FileOutputStream(imageCacheFile);
+
+                                                image.compress(Bitmap.CompressFormat.JPEG, 100, out);
+
+                                                out.close();
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                        else
+                                        {
+                                            uri = imageData.getData();
+                                            System.out.println("uri2 : " + uri.toString());
+
+                                            if( uri != null )
+                                            {
+                                                Cursor cursor = getContentResolver().query(uri, null, null, null, null );
+                                                if( cursor != null)
+                                                {
+                                                    cursor.moveToNext();
+                                                    filepath = cursor.getString(cursor.getColumnIndex("_data"));
+                                                    cursor.close();
+                                                }
+                                            }
+                                        }
 
                                         new Thread
                                         (
-                                            new UpdateQueryRunnable
-                                                (
-                                                    "http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_insert_visited_sight.php",
-                                                    postData
-                                                )
-                                                {
+                                            new FileUploadRunnable
+                                            (
+                                                    "http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/upload.php",
+                                                    filepath,
+                                                    maxVisitedId
+                                            )
+                                            {
                                                 @Override
                                                 public void postRun(Object ...params)
                                                 {
-                                                    Uri uri = null;
-                                                    String filepath = "default.jpg";
-                                                    if( imageData.getData() == null ) // 될지 안될지 모름
-                                                    {
-                                                        String[] IMAGE_PROJECTION =
-                                                            {
-                                                                MediaStore.Images.ImageColumns.DATA,
-                                                                MediaStore.Images.ImageColumns._ID,
-                                                            };
-
-                                                        try
-                                                        {
-                                                            Cursor cursorImages = getContentResolver().query
-                                                            (
-                                                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                                                                IMAGE_PROJECTION,
-                                                                null,
-                                                                null,
-                                                                null
-                                                            );
-
-                                                            if (cursorImages != null && cursorImages.moveToLast())
-                                                            {
-                                                                uri = Uri.parse(cursorImages.getString(0)); //경로
-                                                                System.out.println("uri1 : " + uri.toString());
-                                                                //int id = cursorImages.getInt(1); //아이디
-                                                                cursorImages.close(); // 커서 사용이 끝나면 꼭 닫아준다.
-                                                            }
-                                                            else
-                                                                System.out.println("Cannot Access Image File");
-                                                        }
-                                                        catch(Exception e)
-                                                        {
-                                                            e.printStackTrace();
-                                                        }
-                                                    }
-                                                    else
-                                                    {
-                                                        uri = imageData.getData();
-                                                        System.out.println("uri2 : " + uri.toString());
-                                                    }
-
-                                                    if( uri != null )
-                                                    {
-                                                        Cursor cursor = getContentResolver().query(uri, null, null, null, null );
-                                                        if( cursor != null)
-                                                        {
-                                                            cursor.moveToNext();
-                                                            filepath = cursor.getString(cursor.getColumnIndex("_data"));
-                                                            cursor.close();
-                                                        }
-                                                    }
-
                                                     new Thread
                                                     (
-                                                        new FileUploadRunnable
+                                                        new UpdateQueryRunnable
                                                         (
-                                                            "http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/upload.php",
-                                                            filepath,
-                                                            maxVisitedId
+                                                            "http://" + GlobalApplication.SERVER_IP_ADDR + ":" + GlobalApplication.SERVER_IP_PORT + "/podoal/db_insert_visited_sight.php",
+                                                            postData
                                                         )
                                                         {
                                                             @Override
@@ -496,9 +493,9 @@ public class SideMenuActivity extends AppCompatActivity implements NavigationVie
                                                                     @Override
                                                                     public void run()
                                                                     {
-                                                                        MapsFragment.getVisitedSightList().add(visitedSightDTO);
-                                                                        MapsFragment.setMarkers();
-                                                                        System.out.println("SET_MARKETS_REQUEST_CAMERA_RESULT_OK");
+                                                                    MapsFragment.getVisitedSightList().add(visitedSightDTO);
+                                                                    MapsFragment.setMarkers();
+                                                                    System.out.println("SET_MARKETS_REQUEST_CAMERA_RESULT_OK");
                                                                     }
                                                                 });
                                                             }
